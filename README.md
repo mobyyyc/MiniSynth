@@ -79,7 +79,7 @@ python scripts/smoke_render.py
 Datasets are named `dN`. Historical models used long descriptive IDs, but new
 models use short change-focused IDs such as `v3.0_restructure`,
 `v3.1_500ksamples`, `v3.2_oscmix`, `v3.3_main_detuned_mix`,
-`v3.4_audible_loss`, and `v3.5_noise_detune_loss`. Keep dataset IDs and model IDs separate.
+`v3.4_audible_loss`, `v3.5_noise_detune_loss`, and `v3.6_noise_detune_ablation`. Keep dataset IDs and model IDs separate.
 
 Generate the first tiny local dataset:
 
@@ -147,7 +147,7 @@ Superseded one-off prediction and playground scripts live in
 desktop app, `scripts/predict_patch_torch.py`, and dataset-level evaluation commands for
 new work. Local historical model checkpoints likewise live in the ignored
 `models/legacy_pre_nwsd_v1/` archive. The active release checkpoint is
-`models/v3.5_noise_detune_loss.pt`; keep `models/v3.4_audible_loss.pt` only as the current
+`models/v3.6_noise_detune_ablation.pt`; keep `models/v3.4_audible_loss.pt` only as the current
 NWSD-v1 comparison baseline.
 
 All NWSD-v1 work stays outside that archive:
@@ -179,7 +179,7 @@ See `docs/PRODUCT_BENCHMARK.md` for the required comparison record and promotion
 Run a checkpoint against all 36 product cases and save its report and comparison artifacts:
 
 ```powershell
-& $Python scripts/evaluate_product_benchmark.py --model models/v3.5_noise_detune_loss.pt --device cuda --quiet
+& $Python scripts/evaluate_product_benchmark.py --model models/v3.6_noise_detune_ablation.pt --device cuda --quiet
 ```
 
 Pass `--output-dir` only for a new or empty directory. The evaluator refuses to mix artifacts
@@ -244,7 +244,7 @@ The current best proven model family is the v3 pitch-conditioned grouped-head se
 
 `v3.4_audible_loss` keeps the v3.3 target and architecture, but changes the training objective so waveform, balance, and detune mistakes matter more when the affected oscillator is audible and matter less when it is nearly silent.
 
-`v3.5_noise_detune_loss` keeps v3.4's audibility-aware objective, reduces detune loss when the detuned oscillator is noise, and boosts audible-noise waveform classification. The next planned experiment is `v3.6_noise_detune_ablation`: it keeps the same architecture, data, optimizer, and noise-detune suppression, but removes only that waveform-classification boost.
+`v3.5_noise_detune_loss` keeps v3.4's audibility-aware objective, reduces detune loss when the detuned oscillator is noise, and boosts audible-noise waveform classification. The promoted `v3.6_noise_detune_ablation` keeps the same architecture, data, optimizer, and noise-detune suppression, but removes only that waveform-classification boost.
 
 The v3 defaults are intentionally not exposed as routine CLI switches. If a future
 experiment needs a different architecture or loss, change the code deliberately and
@@ -257,11 +257,11 @@ Evaluate a current PyTorch checkpoint on a generated dataset:
 ```bash
 python scripts/evaluate_dataset_torch.py \
   --metadata data/generated/dN/metadata.jsonl \
-  --model models/v3.5_noise_detune_loss.pt \
+  --model models/v3.6_noise_detune_ablation.pt \
   --count 1000 \
   --start-index 0 \
   --device cuda \
-  --output runs/evaluation/v3.5_noise_detune_loss_on_dN_eval.json
+  --output runs/nwsd_v1/evaluation/v3.6_noise_detune_ablation_on_dN_eval.json
 ```
 
 Use a smaller count for quick checks:
@@ -269,9 +269,9 @@ Use a smaller count for quick checks:
 ```bash
 python scripts/evaluate_dataset_torch.py \
   --metadata data/generated/dN/metadata.jsonl \
-  --model models/v3.5_noise_detune_loss.pt \
+  --model models/v3.6_noise_detune_ablation.pt \
   --count 200 \
-  --output runs/evaluation/v3.5_noise_detune_loss_smoke_eval.json
+  --output runs/nwsd_v1/evaluation/v3.6_noise_detune_ablation_smoke_eval.json
 ```
 
 Evaluation reports are compact by default: they include weighted audio distance summaries,
@@ -297,8 +297,8 @@ Predict a patch JSON from one audio clip using a PyTorch checkpoint:
 ```bash
 python scripts/predict_patch_torch.py \
   data/generated/dN/audio/patch_000000_seed_0000.wav \
-  runs/pytorch_prediction/v3.5_noise_detune_loss_patch.json \
-  --model models/v3.5_noise_detune_loss.pt \
+  runs/pytorch_prediction/v3.6_noise_detune_ablation_patch.json \
+  --model models/v3.6_noise_detune_ablation.pt \
   --freq 440
 ```
 
@@ -307,9 +307,9 @@ Render and compare a PyTorch prediction against the target audio:
 ```bash
 python scripts/evaluate_prediction_torch.py \
   data/generated/dN/audio/patch_000000_seed_0000.wav \
-  --model models/v3.5_noise_detune_loss.pt \
+  --model models/v3.6_noise_detune_ablation.pt \
   --freq 440 \
-  --output-dir runs/pytorch_prediction/v3.5_noise_detune_loss_patch_eval
+  --output-dir runs/pytorch_prediction/v3.6_noise_detune_ablation_patch_eval
 ```
 
 ## Compare Reports
@@ -364,7 +364,7 @@ Content-Type: application/json
 
 {
   "audio_path": "playground/testpluck.wav",
-  "model_path": "models/v3.5_noise_detune_loss.pt",
+  "model_path": "models/v3.6_noise_detune_ablation.pt",
   "freq_hz": 440,
   "crop_start_seconds": 0.0,
   "crop_end_seconds": 0.4,
@@ -386,7 +386,7 @@ website Download page links to that verified release. Before a public release ex
 primary CTA must clearly communicate the release state instead of exposing a dead download.
 
 The first website content will be the product story, four app screenshots, approved audio
-A/B examples with spectrogram comparisons, `v3.5_noise_detune_loss` labels, Windows-first
+A/B examples with spectrogram comparisons, `v3.6_noise_detune_ablation` labels, Windows-first
 requirements, local-processing privacy copy, and known limitations. See `PLAN.md` and
 `PROGRESS.md` for the detailed website and Vercel rollout sequence.
 
@@ -442,7 +442,7 @@ npm run package:win
 This creates an ignored Windows NSIS web installer and its separately packaged app payload
 under `dist/`. It installs the Electron app shell, NeuroWave Python source resources,
 prepared Python/Torch runtime, and the selected local model checkpoint when
-`models/v3.5_noise_detune_loss.pt` exists at build time. The small bootstrap installer
+`models/v3.6_noise_detune_ablation.pt` exists at build time. The small bootstrap installer
 downloads the large, versioned payload during installation, so app launches never repeat a
 multi-gigabyte portable self-extraction. For offline testing, keep the generated payload in
 the same folder as the installer; Electron Builder verifies and uses it without downloading.
@@ -465,9 +465,9 @@ Release. In an installed build, optional `settings.local.json` can be placed bes
 `NeuroWave.exe` to override Python, backend port, default model path, and output folder.
 
 Packaged development builds first use a bundled
-`resources/models/v3.5_noise_detune_loss.pt` checkpoint when present. If the model
+`resources/models/v3.6_noise_detune_ablation.pt` checkpoint when present. If the model
 is not bundled, the app searches common repo/package locations for
-`models/v3.5_noise_detune_loss.pt`, then passes an absolute model path to the
+`models/v3.6_noise_detune_ablation.pt`, then passes an absolute model path to the
 frontend. Runtime app data for packaged builds is stored under
 `%LOCALAPPDATA%/NeuroWave/` by default:
 

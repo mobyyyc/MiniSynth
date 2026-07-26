@@ -42,7 +42,7 @@ time between comparisons.
 ## Run an evaluation
 
 ```powershell
-& $Python scripts/evaluate_product_benchmark.py --model models/v3.5_noise_detune_loss.pt --device cuda --quiet
+& $Python scripts/evaluate_product_benchmark.py --model models/v3.6_noise_detune_ablation.pt --device cuda --quiet
 ```
 
 The evaluator creates a timestamped ignored run directory containing `report.json` and, for
@@ -74,8 +74,8 @@ cases per category:
 ```powershell
 & $Python scripts/prepare_product_benchmark_review.py `
   --report-a <v3.4-report.json> --label-a v3.4_audible_loss `
-  --report-b <v3.5-report.json> --label-b v3.5_noise_detune_loss `
-  --output-dir runs/nwsd_v1/evaluation/product_benchmark/neurowave_product_benchmark_v1/blind_review_v3_4_vs_v3_5
+  --report-b <v3.6-report.json> --label-b v3.6_noise_detune_ablation `
+  --output-dir runs/nwsd_v1/evaluation/product_benchmark/neurowave_product_benchmark_v1/blind_review_v3_4_vs_v3_6
 ```
 
 Listen to the target and each randomized A/B option in every case folder, then fill

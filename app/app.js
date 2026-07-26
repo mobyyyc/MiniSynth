@@ -76,7 +76,7 @@ const RECENT_RUNS_KEY = "neurowave.recentRuns.v1";
 const MAX_RECENT_ITEMS = 5;
 const SETTINGS_FIELDS = {
   backendUrl: "http://127.0.0.1:8765",
-  modelPath: "models/v3.5_noise_detune_loss.pt",
+  modelPath: "models/v3.6_noise_detune_ablation.pt",
   outputDir: "runs/app",
 };
 const MODEL_MEL_FRAMES = 256;

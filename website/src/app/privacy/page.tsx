@@ -77,7 +77,7 @@ export default function PrivacyPage() {
       <footer>
         <Link className="wordmark" href="/">Neuro<span>Wave</span></Link>
         <p>Audio is processed locally in the desktop app.</p>
-        <p>Current model: v3.5_noise_detune_loss</p>
+        <p>Current model: v3.6_noise_detune_ablation</p>
         <a className="text-link" href={`mailto:${contactEmail}`}>Contact</a>
       </footer>
     </main>

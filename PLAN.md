@@ -928,8 +928,7 @@ Recommended product architecture:
   into packaged builds when present; package a dedicated Python runtime later.
 - First platform: Windows x64.
 - First app name: NeuroWave.
-- First checkpoint: the current best v3 checkpoint, starting with `v3.5_noise_detune_loss`
-  unless a newer benchmark clearly replaces it.
+- First checkpoint: `v3.6_noise_detune_ablation`, the current research-approved model.
 
 Core app workflow:
 
@@ -1081,7 +1080,7 @@ are explicitly out of scope for v1.
   prediction, and audio/spectrogram comparison.
 - Use only audio, images, and screenshots that NeuroWave may publish; retain a short source
   note for every example.
-- Present `v3.5_noise_detune_loss` wherever the current model is demonstrated.
+- Present `v3.6_noise_detune_ablation` wherever the current model is demonstrated.
 - State that results are strongest for clean, single-note clips with correct frequency.
 - State that audio is processed locally, not uploaded by the website or desktop app.
 - Do not claim general instrument recreation, cloud inference, or a signed installer until

@@ -36,8 +36,8 @@ module.exports = {
       filter: ["**/*", "!pyvenv.cfg", "!.gitignore", "!.gitkeep"],
     },
     {
-      from: "models/v3.5_noise_detune_loss.pt",
-      to: "models/v3.5_noise_detune_loss.pt",
+      from: "models/v3.6_noise_detune_ablation.pt",
+      to: "models/v3.6_noise_detune_ablation.pt",
     },
   ],
   win: {

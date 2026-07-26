@@ -47,8 +47,8 @@ use it without downloading. For an installed build, place a `settings.local.json
 `NeuroWave.exe` if you need to override the Python executable, model path, or output folder.
 
 Packaged development builds first use the bundled checkpoint under
-`resources\models\v3.5_noise_detune_loss.pt` when present, then search common
-repo/package locations for `models\v3.5_noise_detune_loss.pt`. For installed builds,
+`resources\models\v3.6_noise_detune_ablation.pt` when present, then search common
+repo/package locations for `models\v3.6_noise_detune_ablation.pt`. For installed builds,
 optional `settings.local.json` is read beside `NeuroWave.exe`. Runtime app data is stored under `%LOCALAPPDATA%\NeuroWave\`
 by default:
 

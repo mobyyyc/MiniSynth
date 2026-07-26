@@ -55,8 +55,8 @@ export default function ChangelogPage() {
         </article>
         <ul className="release-items">
           <li><span>Installer</span><p>Windows x64 NSIS web installer, designed to download the large bundled runtime once during installation.</p></li>
-          <li><span>Runtime</span><p>Bundled Python and CUDA PyTorch runtime validated without a developer environment.</p></li>
-          <li><span>Model</span><p>Bundled <strong>v3.5_noise_detune_loss</strong> checkpoint for the current desktop workflow.</p></li>
+          <li><span>Runtime</span><p>Bundled Python and CPU PyTorch runtime validated without a developer environment.</p></li>
+          <li><span>Model</span><p>Bundled <strong>v3.6_noise_detune_ablation</strong> checkpoint, selected through frozen benchmarks and blind listening review.</p></li>
           <li><span>Validation</span><p>Clean-machine Windows Sandbox installation and prediction flow completed successfully.</p></li>
         </ul>
       </section>
@@ -81,7 +81,7 @@ export default function ChangelogPage() {
       <footer>
         <Link className="wordmark" href="/">Neuro<span>Wave</span></Link>
         <p>Audio is processed locally in the desktop app.</p>
-        <p>Current model: v3.5_noise_detune_loss</p>
+        <p>Current model: v3.6_noise_detune_ablation</p>
         <a className="text-link" href={`mailto:${contactEmail}`}>Contact</a>
       </footer>
     </main>

@@ -15,7 +15,7 @@ const LOCAL_SETTINGS_PATH = app.isPackaged
   ? path.join(SETTINGS_BASE, "settings.local.json")
   : path.join(__dirname, "settings.local.json");
 const DEFAULT_DEV_USER_DATA = path.join(APP_ROOT, ".electron-user-data");
-const DEFAULT_MODEL_NAME = "v3.5_noise_detune_loss.pt";
+const DEFAULT_MODEL_NAME = "v3.6_noise_detune_ablation.pt";
 const localSettings = loadLocalSettings();
 const backendSettings = localSettings.backend || {};
 const appSettings = localSettings.app || {};

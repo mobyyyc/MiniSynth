@@ -13,7 +13,7 @@ import urllib.request
 
 DEFAULT_APP = Path("dist/win-unpacked/NeuroWave.exe")
 DEFAULT_BACKEND_URL = "http://127.0.0.1:8765"
-DEFAULT_MODEL = Path("dist/win-unpacked/resources/models/v3.5_noise_detune_loss.pt")
+DEFAULT_MODEL = Path("dist/win-unpacked/resources/models/v3.6_noise_detune_ablation.pt")
 
 
 def parse_args():

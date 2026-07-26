@@ -8,7 +8,7 @@
     "logPath": "neurowave-backend.log"
   },
   "app": {
-    "modelPath": "models/v3.5_noise_detune_loss.pt",
+    "modelPath": "models/v3.6_noise_detune_ablation.pt",
     "inputDir": "app-inputs",
     "outputDir": "runs/app"
   }
