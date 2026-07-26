@@ -48,8 +48,8 @@ export default function DownloadPage() {
             <em>Then listen.</em>
           </h1>
           <p className="download-intro reveal reveal-two">
-            NeuroWave is preparing its first Windows release. The installer is validated on a
-            clean machine and will appear here only when its complete GitHub Release is ready.
+            NeuroWave is available for Windows. The installer downloads the complete bundled
+            runtime once during setup, then keeps audio processing on your machine.
           </p>
         </div>
       </section>

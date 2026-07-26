@@ -35,8 +35,8 @@ export default function ChangelogPage() {
             <em>what ships.</em>
           </h1>
           <p className="changelog-intro reveal reveal-two">
-            NeuroWave is preparing its first Windows release. This page records what has been
-            validated, and makes the remaining publication step explicit.
+            NeuroWave publishes its Windows desktop release through GitHub. This page records
+            what ships, how it was validated, and the remaining release considerations.
           </p>
         </div>
       </section>
@@ -49,25 +49,25 @@ export default function ChangelogPage() {
         <article>
           <div className="release-version">{currentRelease.version}</div>
           <div className="release-summary">
-            <h2 id="current-release-heading">Windows desktop app, ready for publication.</h2>
+            <h2 id="current-release-heading">Windows desktop app, available now.</h2>
             <p>{currentRelease.summary}</p>
           </div>
         </article>
         <ul className="release-items">
           <li><span>Installer</span><p>Windows x64 NSIS web installer, designed to download the large bundled runtime once during installation.</p></li>
-          <li><span>Runtime</span><p>Bundled Python and CPU PyTorch runtime validated without a developer environment.</p></li>
+          <li><span>Runtime</span><p>Bundled Python and CPU PyTorch runtime, tested through unpacked-app readiness and prediction smoke checks.</p></li>
           <li><span>Model</span><p>Bundled <strong>v3.6_noise_detune_ablation</strong> checkpoint, selected through frozen benchmarks and blind listening review.</p></li>
-          <li><span>Validation</span><p>Clean-machine Windows Sandbox installation and prediction flow completed successfully.</p></li>
+          <li><span>Validation</span><p>The v0.1.1 installer has not yet repeated the earlier release's clean-machine Windows Sandbox validation.</p></li>
         </ul>
       </section>
 
       <section className="publication-note" aria-labelledby="publication-heading">
-        <p className="eyebrow">Before the link appears</p>
-        <h2 id="publication-heading">The release must travel as a complete set.</h2>
+        <p className="eyebrow">Release contents</p>
+        <h2 id="publication-heading">The installer travels as a complete set.</h2>
         <p>
-          The public GitHub Release will contain the bootstrap installer, its versioned payload,
-          and the generated update metadata together. Until that release is verified, NeuroWave
-          will not expose a download button.
+          The GitHub Release contains the bootstrap installer, its versioned payload, and the
+          generated update metadata together. The installer downloads the payload once during
+          installation; the desktop app then runs locally.
         </p>
         {currentRelease.isPublic && currentRelease.githubReleaseUrl ? (
           <a className="button button-primary" href={currentRelease.githubReleaseUrl}>

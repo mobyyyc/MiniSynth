@@ -92,7 +92,7 @@ export default function HowItWorksPage() {
       <section className="method-note" aria-labelledby="model-heading">
         <div className="method-note-stamp" aria-hidden="true">
           <span>Model</span>
-          <b>v3.5</b>
+          <b>v3.6</b>
           <i>noise + detune</i>
         </div>
         <div>

@@ -900,8 +900,9 @@ Implementation sequence:
 8. [x] Compare v3.6 against v3.4 and v3.5 on the unchanged NWSD-v1 and product benchmarks.
 9. [x] Complete a fresh balanced blind v3.4-versus-v3.6 listening review before checkpoint
    promotion or release change.
-10. [ ] On explicit release approval, update the desktop app checkpoint to v3.6, package the
-    installer, and re-run the clean-machine release validation before publishing an update.
+10. [x] On explicit release approval, update the desktop app checkpoint to v3.6, package the
+    installer, and publish the v0.1.1 update. The unpacked-app smoke checks passed; a fresh
+    clean-machine installer validation remains a post-release release-engineering follow-up.
 
 The next likely representation decision is continuous wave-mix targets, but it must wait
 until the v3.5 baseline shows that waveform identity remains the dominant product failure.

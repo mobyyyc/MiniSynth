@@ -74,9 +74,11 @@ This is intentionally a release-candidate staging command, not a source-controll
 dependency lock. The package step excludes venv marker files such as `pyvenv.cfg` from
 `resources/python-runtime/`. Re-run the CPU runtime check after preparing it.
 
-The bundled runtime has passed clean-machine validation in Windows Sandbox: the packaged
-app started its bundled backend and loaded the bundled v3.6 model without the project
-repo, project `.venv`, or developer Python installation.
+The bundled runtime passed clean-machine validation in Windows Sandbox for the prior v3.5
+release: the packaged app started its bundled backend without the project repo, project
+`.venv`, or developer Python installation. The v0.1.1/v3.6 release passed unpacked-app
+readiness and prediction smoke tests; a fresh clean-machine installer test for this exact
+release remains recommended.
 
 ## Build Commands
 
@@ -148,8 +150,9 @@ npm run package:smoke:predict
 - Backend log is written under `%LOCALAPPDATA%\NeuroWave\Logs\`.
 - The CPU NSIS web installer installs successfully and the installed app completes the same
   startup and prediction checks.
-- Windows Sandbox clean-machine installer validation has passed without the project repo,
-  project `.venv`, or developer Python installation.
+- For each public release, record whether Windows Sandbox clean-machine installer validation
+  has been repeated without the project repo, project `.venv`, or developer Python
+  installation. v0.1.1/v3.6 has not repeated that test.
 
 ## Known Pre-Website Blockers
 
@@ -160,3 +163,5 @@ npm run package:smoke:predict
   Vercel is not the distribution host for the multi-gigabyte installer payload.
 - Code signing has not been configured.
 - Manual packaged UI verification is still required after every release build.
+- The v0.1.1/v3.6 public release was validated with unpacked-app readiness and prediction
+  smoke tests, not a new clean-machine installer run.

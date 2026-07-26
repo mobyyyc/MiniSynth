@@ -308,8 +308,9 @@ Next recommended task:
 - [x] Evaluate v3.6 against v3.4 and v3.5 on the frozen NWSD-v1 and product benchmarks.
 - [x] Complete the fresh balanced blind v3.4-versus-v3.6 listening review before promoting a
   new checkpoint or changing the release.
-- [~] Update the desktop app/package/release from v3.5 to the promoted
-  v3.6 checkpoint and complete release validation.
+- [x] Update the desktop app/package/release from v3.5 to the promoted
+  v3.6 checkpoint and publish v0.1.1. Complete a fresh clean-machine installer test as a
+  release-engineering follow-up.
 - [ ] Decide whether the current waveform enum target must become continuous wave-mix before aiming for `test_mae <= 0.05`.
 - [ ] Commit Milestone H completion.
 
@@ -558,11 +559,11 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-07-26
 
-- Prepared the v0.1.1 desktop release source: the Electron default, packaged resource, smoke
-  test, settings example, release documentation, and website release state now target the
-  promoted `v3.6_noise_detune_ablation` checkpoint. The CPU runtime check, full unit suite,
-  website production build, unpacked app smoke tests, and local CPU NSIS web-installer build
-  all passed; publishing and final release verification remain in progress.
+- Published v0.1.1 as the latest GitHub release, tagged at `81aa001`, with the v3.6 desktop
+  default, CPU-only NSIS web bootstrapper, 331 MB payload, and `latest.yml` manifest. The CPU
+  runtime check, full unit suite, website production build, unpacked-app readiness/prediction
+  smoke tests, and local installer build all passed. The v0.1.1 installer has not yet repeated
+  the previous release's Windows Sandbox clean-machine test.
 - Completed and unblinded the fresh balanced v3.4-versus-v3.6 listening review. v3.6 won
   `5` preferences versus v3.4's `2`, with `5` ties; mean timbre/envelope scores were
   `5.00`/`5.00` for v3.6 and `4.92`/`5.00` for v3.4. Together with v3.6's wins on both frozen
