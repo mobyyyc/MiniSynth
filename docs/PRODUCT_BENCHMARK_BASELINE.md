@@ -67,3 +67,20 @@ v3.6 is the objective winner on both frozen benchmarks and has zero failed rende
 product detune, audible noise, quiet mixes, and filter/resonance over v3.4, while wave identity
 and envelope-extreme category means remain worse. A fresh balanced blind v3.4-versus-v3.6
 listening review is required before promoting it to the app checkpoint.
+
+## v3.6 blind review and promotion decision
+
+The completed balanced 12-case v3.4-versus-v3.6 blind review gave v3.6 five preferences,
+v3.4 two, and five ties. v3.6 received mean timbre and envelope scores of `5.00`; v3.4 scored
+`4.92` and `5.00` respectively. The listener preferred v3.6 in both quiet-mix cases, one
+audible-noise case, one pitched-detune case, and one filter/resonance case; wave identity and
+envelope cases tied.
+
+Decision: **promote v3.6 as the research-approved next app checkpoint.** It satisfies the
+objective and listening gates without a material listening regression in the two objective
+product categories where it remains weaker. The public v3.5 release is unchanged until an
+explicitly approved app-model, packaging, and release update is completed.
+
+The local ignored v3.6 objective reports and completed review evidence are retained in
+`runs/nwsd_v1/evaluation/archive/product_benchmark_v1_v3_4_v3_6_20260726/`; regenerated
+WAV/patch caches and quiet evaluator logs were pruned after review.

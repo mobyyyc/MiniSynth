@@ -306,8 +306,10 @@ Next recommended task:
 - [x] Train v3.6 using NWSD-v1 train/dev only, with quiet console output and retained compact
   checkpoint/metrics artifacts.
 - [x] Evaluate v3.6 against v3.4 and v3.5 on the frozen NWSD-v1 and product benchmarks.
-- [ ] Complete the fresh balanced blind v3.4-versus-v3.6 listening review before promoting a
+- [x] Complete the fresh balanced blind v3.4-versus-v3.6 listening review before promoting a
   new checkpoint or changing the release.
+- [ ] On explicit approval, update the desktop app/package/release from v3.5 to the promoted
+  v3.6 checkpoint and complete release validation.
 - [ ] Decide whether the current waveform enum target must become continuous wave-mix before aiming for `test_mae <= 0.05`.
 - [ ] Commit Milestone H completion.
 
@@ -556,6 +558,13 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-07-26
 
+- Completed and unblinded the fresh balanced v3.4-versus-v3.6 listening review. v3.6 won
+  `5` preferences versus v3.4's `2`, with `5` ties; mean timbre/envelope scores were
+  `5.00`/`5.00` for v3.6 and `4.92`/`5.00` for v3.4. Together with v3.6's wins on both frozen
+  objective benchmarks, this promotes v3.6 as the next app checkpoint. The public v3.5
+  release remains unchanged pending explicit app/package/release approval.
+- Archived compact v3.4/v3.6 product, NWSD-v1, and blind-review evidence; pruned the
+  regenerable WAV/patch caches and quiet evaluator logs after the promotion decision.
 - Trained the user-run `v3.6_noise_detune_ablation` checkpoint on NWSD-v1 train/dev only.
   It selected epoch 41, with development MAE `0.05490` and waveform accuracy `0.9106`.
   The frozen 2,000-clip NWSD-v1 evaluation is the new aggregate best: mean `26.29`, median
