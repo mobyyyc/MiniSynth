@@ -303,9 +303,11 @@ Next recommended task:
   architecture, target, loss, and dataset changes in that comparison. Decision: ablate only
   v3.5's audible-noise waveform boost while retaining its noise-detune suppression.
 - [x] Implement `v3.6_noise_detune_ablation` and isolated checkpoint/metrics output defaults.
-- [ ] Train v3.6 using NWSD-v1 train/dev only, with quiet console output and retained compact
+- [x] Train v3.6 using NWSD-v1 train/dev only, with quiet console output and retained compact
   checkpoint/metrics artifacts.
-- [ ] Evaluate v3.6 against v3.4 and v3.5 on the frozen NWSD-v1 and product benchmarks.
+- [x] Evaluate v3.6 against v3.4 and v3.5 on the frozen NWSD-v1 and product benchmarks.
+- [ ] Complete the fresh balanced blind v3.4-versus-v3.6 listening review before promoting a
+  new checkpoint or changing the release.
 - [ ] Decide whether the current waveform enum target must become continuous wave-mix before aiming for `test_mae <= 0.05`.
 - [ ] Commit Milestone H completion.
 
@@ -551,6 +553,16 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 - [ ] Commit Milestone J completion.
 
 ## Progress Log
+
+### 2026-07-26
+
+- Trained the user-run `v3.6_noise_detune_ablation` checkpoint on NWSD-v1 train/dev only.
+  It selected epoch 41, with development MAE `0.05490` and waveform accuracy `0.9106`.
+  The frozen 2,000-clip NWSD-v1 evaluation is the new aggregate best: mean `26.29`, median
+  `9.85`, maximum `699.29`, and zero failures. The 36-case product benchmark is also the new
+  aggregate best: mean `20.74`, median `8.84`, maximum `145.41`, and zero failures. Its
+  category wave-identity and envelope regressions still require the prepared fresh blind
+  v3.4-versus-v3.6 listening review before any checkpoint promotion.
 
 ### 2026-07-23
 

@@ -48,3 +48,22 @@ unchanged 2,000-clip NWSD-v1 benchmark and this product benchmark before any pro
 The local ignored reports and completed listening-review evidence are retained in
 `runs/nwsd_v1/evaluation/archive/product_benchmark_v1_v3_4_v3_5_20260724/`. Regenerable
 target/prediction WAV and copied patch artifacts were intentionally pruned after review.
+
+## v3.6 objective gate
+
+The single-variable `v3.6_noise_detune_ablation` experiment completed with v3.5's
+noise-detune suppression retained and only its audible-noise waveform boost removed. Training
+used the fixed 500,000-clip NWSD-v1 train partition and 10,000-clip development partition;
+the best checkpoint was epoch 41 with development MAE `0.05490` and waveform accuracy
+`0.9106`.
+
+| Checkpoint | NWSD-v1 mean | NWSD-v1 median | NWSD-v1 maximum | Product mean | Product median |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `v3.4_audible_loss` | 30.031 | 10.957 | 1034.783 | 24.010 | 12.913 |
+| `v3.5_noise_detune_loss` | 29.828 | 9.966 | 957.497 | 33.267 | 14.239 |
+| `v3.6_noise_detune_ablation` | **26.288** | **9.849** | **699.287** | **20.738** | **8.841** |
+
+v3.6 is the objective winner on both frozen benchmarks and has zero failed renders. It improves
+product detune, audible noise, quiet mixes, and filter/resonance over v3.4, while wave identity
+and envelope-extreme category means remain worse. A fresh balanced blind v3.4-versus-v3.6
+listening review is required before promoting it to the app checkpoint.
