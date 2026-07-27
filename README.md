@@ -184,7 +184,8 @@ Run a checkpoint against all 36 product cases and save its report and comparison
 
 Pass `--output-dir` only for a new or empty directory. The evaluator refuses to mix artifacts
 into an existing run and otherwise creates a timestamped run under
-`runs/nwsd_v1/evaluation/product_benchmark/`.
+`runs/nwsd_v1/evaluation/product_benchmark/`. Each report includes paired oscillator-level,
+detune, and ADSR errors split by waveform correctness and audible-noise membership.
 
 Worker rules:
 

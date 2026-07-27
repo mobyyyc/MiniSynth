@@ -120,6 +120,77 @@ def ranked_failure_groups(category_metrics):
     )
 
 
+def waveform_correct(result):
+    """Return whether both categorical oscillator waveform predictions match."""
+    wave_errors = [
+        result.get("parameter_errors", {}).get(name)
+        for name in ("osc1_wave", "osc2_wave")
+    ]
+    if any(not details or "match" not in details for details in wave_errors):
+        return None
+    return all(details["match"] for details in wave_errors)
+
+
+def paired_error_summaries(results):
+    """Summarize calibration error by waveform correctness and audible-noise membership."""
+    groups = {
+        "all": [],
+        "waveform_correct": [],
+        "waveform_incorrect": [],
+        "audible_noise": [],
+        "non_audible_noise": [],
+        "audible_noise_waveform_correct": [],
+        "audible_noise_waveform_incorrect": [],
+        "non_audible_noise_waveform_correct": [],
+        "non_audible_noise_waveform_incorrect": [],
+    }
+    for result in results:
+        is_waveform_correct = waveform_correct(result)
+        if is_waveform_correct is None:
+            continue
+        is_audible_noise = "audible_noise" in result.get("categories", [])
+        membership = "audible_noise" if is_audible_noise else "non_audible_noise"
+        correctness = "waveform_correct" if is_waveform_correct else "waveform_incorrect"
+        groups["all"].append(result)
+        groups[correctness].append(result)
+        groups[membership].append(result)
+        groups[f"{membership}_{correctness}"].append(result)
+
+    summaries = {}
+    for name, group in groups.items():
+        total_level_errors = []
+        balance_errors = []
+        detune_errors = []
+        adsr_errors = {parameter: [] for parameter in ("attack", "decay", "sustain", "release")}
+        for result in group:
+            main_detuned = result["main_detuned_errors"]
+            total_level_errors.append(main_detuned["total_level"]["absolute_error"])
+            balance_errors.append(main_detuned["detuned_balance"]["absolute_error"])
+            detune_errors.append(main_detuned["detune"]["normalized_absolute_error"])
+            for parameter in adsr_errors:
+                adsr_errors[parameter].append(
+                    result["parameter_errors"][parameter]["normalized_error"]
+                )
+
+        summary = {"case_count": len(group)}
+        if group:
+            adsr_by_parameter = {
+                parameter: sum(errors) / len(errors)
+                for parameter, errors in adsr_errors.items()
+            }
+            summary.update(
+                {
+                    "oscillator_total_level_mae": sum(total_level_errors) / len(total_level_errors),
+                    "detuned_balance_mae": sum(balance_errors) / len(balance_errors),
+                    "detune_normalized_mae": sum(detune_errors) / len(detune_errors),
+                    "adsr_normalized_mae": sum(adsr_by_parameter.values()) / len(adsr_by_parameter),
+                    "adsr_normalized_mae_by_parameter": adsr_by_parameter,
+                }
+            )
+        summaries[name] = summary
+    return summaries
+
+
 def evaluate_case(benchmark, case, checkpoint, output_dir, device):
     sources = case_source_paths(benchmark, case)
     target_audio_path = sources["target_audio"]
@@ -220,6 +291,7 @@ def main():
         },
         "category_metrics": categories,
         "ranked_failure_groups": ranked_failure_groups(categories),
+        "paired_error_groups": paired_error_summaries(successful),
         "worst_cases": worst_clip_diagnostics(
             successful,
             top_n=args.diagnostics_top_n,

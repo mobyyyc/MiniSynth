@@ -3,7 +3,11 @@ from pathlib import Path
 import unittest
 
 from minisynth.product_benchmark import load_product_benchmark, validate_product_benchmark
-from scripts.evaluate_product_benchmark import category_summaries, ranked_failure_groups
+from scripts.evaluate_product_benchmark import (
+    category_summaries,
+    paired_error_summaries,
+    ranked_failure_groups,
+)
 from scripts.prepare_product_benchmark_review import select_review_cases
 from scripts.summarize_product_benchmark_review import summarize_review
 
@@ -56,6 +60,48 @@ class TestProductBenchmark(unittest.TestCase):
         self.assertEqual(summaries["noise"]["worst_case_ids"], ["one", "two"])
         self.assertEqual(summaries["detune"]["failed_count"], 1)
         self.assertEqual(ranked_failure_groups(summaries)[0]["category"], "noise")
+
+    def test_paired_error_summaries_split_waveform_and_noise_membership(self):
+        def result(categories, first_wave_match, second_wave_match, total_level, detune, decay):
+            return {
+                "categories": categories,
+                "parameter_errors": {
+                    "osc1_wave": {"match": first_wave_match},
+                    "osc2_wave": {"match": second_wave_match},
+                    "attack": {"normalized_error": 0.1},
+                    "decay": {"normalized_error": decay},
+                    "sustain": {"normalized_error": 0.3},
+                    "release": {"normalized_error": 0.4},
+                },
+                "main_detuned_errors": {
+                    "total_level": {"absolute_error": total_level},
+                    "detuned_balance": {"absolute_error": 0.2},
+                    "detune": {"normalized_absolute_error": detune},
+                },
+            }
+
+        summaries = paired_error_summaries(
+            [
+                result(["audible_noise"], True, True, 0.8, 0.6, 0.2),
+                result(["audible_noise"], True, False, 0.4, 0.2, 0.6),
+                result(["wave_identity"], True, True, 0.1, 0.3, 0.4),
+            ]
+        )
+
+        self.assertEqual(summaries["all"]["case_count"], 3)
+        self.assertEqual(summaries["audible_noise_waveform_correct"]["case_count"], 1)
+        self.assertEqual(summaries["audible_noise_waveform_incorrect"]["case_count"], 1)
+        self.assertEqual(summaries["non_audible_noise_waveform_correct"]["case_count"], 1)
+        self.assertAlmostEqual(
+            summaries["audible_noise_waveform_correct"]["oscillator_total_level_mae"], 0.8
+        )
+        self.assertAlmostEqual(
+            summaries["audible_noise_waveform_incorrect"]["detune_normalized_mae"], 0.2
+        )
+        self.assertAlmostEqual(
+            summaries["waveform_correct"]["adsr_normalized_mae_by_parameter"]["decay"],
+            0.3,
+        )
 
     def test_review_selection_balances_categories_by_model_disagreement(self):
         report_a = {

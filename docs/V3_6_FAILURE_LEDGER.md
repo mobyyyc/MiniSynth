@@ -54,8 +54,10 @@ one-variable v3.6 comparison. The existing categorical target therefore remains 
 
 ## Next decision gate
 
-Before another checkpoint is trained, add a compact paired-error report to the benchmark
-workflow. It must quantify oscillator-level, detune, and ADSR error separately for
-wave-correct and wave-incorrect cases, with an audible-noise slice. That report will select
-one v3.7 intervention; likely candidates must remain mutually exclusive (for example, a
-loss-only calibration experiment *or* a target/output representation change, not both).
+The paired-error report is now part of the product-benchmark evaluator. On v3.6, the five
+wave-correct audible-noise cases have normalized detune MAE `0.1218` and decay MAE `0.0838`.
+For context, their mean rendered distance is `52.36`; v3.4 and v3.5 score `60.24` and `62.20`
+respectively on the same category. The next v3.7 experiment is therefore a loss-only,
+noise-detune calibration ablation: replace the current binary suppression of detune loss for a
+noise detuned oscillator with a bounded nonzero weight. It must not change the architecture,
+data release, waveform heads, optimizer, or any other loss term.

@@ -31,7 +31,8 @@ version, never mixed with synthetic ground-truth comparisons.
 
 For every checkpoint comparison, save the benchmark ID, checkpoint path and ID, repository
 revision, preprocessing settings, aggregate and per-category metrics, per-case metrics,
-rendered target/prediction pairs, and ranked failure groups under
+rendered target/prediction pairs, ranked failure groups, and paired calibration-error groups
+under
 `runs/nwsd_v1/evaluation/`. Record a brief blind listening review for target/prediction pairs
 on waveform/timbre similarity, envelope similarity, and overall usefulness (1–5 each).
 
@@ -47,9 +48,11 @@ time between comparisons.
 
 The evaluator creates a timestamped ignored run directory containing `report.json` and, for
 each case, target/predicted WAV files plus target/predicted patch JSON. The report includes
-aggregate metrics, category metrics, per-case metrics, ranked category failure groups, and
-the highest-distance cases. Use a fresh empty `--output-dir` only when a predictable location
-is needed.
+aggregate metrics, category metrics, per-case metrics, ranked category failure groups, paired
+oscillator-level/detune/ADSR error groups, and the highest-distance cases. The paired groups
+split results by waveform correctness and audible-noise membership so a wave-correct calibration
+failure is not mistaken for a waveform-target failure. Use a fresh empty `--output-dir` only
+when a predictable location is needed.
 
 The first objective checkpoint comparison is recorded in
 `docs/PRODUCT_BENCHMARK_BASELINE.md`. It is not a promotion decision until the required blind
