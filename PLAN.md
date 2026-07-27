@@ -904,8 +904,11 @@ Implementation sequence:
     installer, and publish the v0.1.1 update. The unpacked-app smoke checks passed; a fresh
     clean-machine installer validation remains a post-release release-engineering follow-up.
 
-The next likely representation decision is continuous wave-mix targets, but it must wait
-until the v3.5 baseline shows that waveform identity remains the dominant product failure.
+The v3.6 frozen failure ledger decided against continuous wave-mix targets for the next
+experiment. Waveform errors remain measurable, but wave-correct audible-noise cases are the
+dominant rendered-audio failure. Add paired oscillator/detune/ADSR error reporting before
+choosing one v3.7 intervention; keep categorical waveform heads as the control until that
+evidence supports a target-schema change.
 
 ### Milestone I: Product Prototype - Windows Desktop App
 

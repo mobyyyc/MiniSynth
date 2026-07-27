@@ -311,7 +311,8 @@ Next recommended task:
 - [x] Update the desktop app/package/release from v3.5 to the promoted
   v3.6 checkpoint and publish v0.1.1. Complete a fresh clean-machine installer test as a
   release-engineering follow-up.
-- [ ] Decide whether the current waveform enum target must become continuous wave-mix before aiming for `test_mae <= 0.05`.
+- [x] Decide whether the current waveform enum target must become continuous wave-mix before aiming for `test_mae <= 0.05`; the v3.6 frozen failure ledger keeps categorical heads because wave-correct audible-noise calibration errors dominate.
+- [ ] Add paired benchmark error reporting for oscillator level, detune, and ADSR, split by waveform correctness and audible-noise membership; use it to select one v3.7 intervention.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -559,6 +560,12 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-07-26
 
+- Completed the v3.6 frozen-benchmark failure ledger from the archived 2,000-clip NWSD-v1
+  and 36-case product reports. Continuous wave-mix targets are not justified as the next
+  change: waveform accuracy is `0.9106` overall, while audible noise is the dominant product
+  failure (mean rendered distance `52.36`) despite `11/12` correct waveform labels. The next
+  research task is paired oscillator/detune/ADSR error reporting, then one controlled v3.7
+  intervention.
 - Published v0.1.1 as the latest GitHub release, tagged at `81aa001`, with the v3.6 desktop
   default, CPU-only NSIS web bootstrapper, 331 MB payload, and `latest.yml` manifest. The CPU
   runtime check, full unit suite, website production build, unpacked-app readiness/prediction
