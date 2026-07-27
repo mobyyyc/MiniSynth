@@ -908,8 +908,8 @@ The v3.6 frozen failure ledger decided against continuous wave-mix targets for t
 experiment. Waveform errors remain measurable, but wave-correct audible-noise cases are the
 dominant rendered-audio failure. The paired oscillator/detune/ADSR report selects one v3.7
 intervention: replace only the binary detuned-noise loss suppression with a bounded nonzero
-weight. Keep categorical waveform heads, data, architecture, optimizer, and all other loss
-terms fixed until evidence supports a target-schema change.
+weight (`0.5` for v3.7). Keep categorical waveform heads, data, architecture, optimizer, and
+all other loss terms fixed until evidence supports a target-schema change.
 
 ### Milestone I: Product Prototype - Windows Desktop App
 

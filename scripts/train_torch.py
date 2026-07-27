@@ -14,6 +14,7 @@ from minisynth.reporting import compact_model_metrics
 from minisynth.torch_model import (
     DEFAULT_LEARNING_RATE,
     LOSS_PRESET_NOISE_DETUNE_ABLATION,
+    LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
     HEAD_MODE_GROUPED,
     MODEL_SIZE_LARGE,
     OPTIMIZER_ADAMW,
@@ -101,6 +102,12 @@ def parse_args():
         help="Disable epoch/batch progress output.",
     )
     parser.add_argument(
+        "--loss-preset",
+        choices=(LOSS_PRESET_NOISE_DETUNE_ABLATION, LOSS_PRESET_NOISE_DETUNE_CALIBRATION),
+        default=LOSS_PRESET_NOISE_DETUNE_ABLATION,
+        help="Controlled experiment loss preset; defaults to the current v3.6 baseline.",
+    )
+    parser.add_argument(
         "--model-output",
         default="models/v3.6_noise_detune_ablation.pt",
         help="Path where the trained PyTorch checkpoint should be saved.",
@@ -143,7 +150,7 @@ def main() -> int:
         head_mode=HEAD_MODE_GROUPED,
         waveform_mode=WAVEFORM_MODE_CLASSIFICATION,
         target_mode=TARGET_MODE_MAIN_DETUNED_MIX,
-        loss_preset=LOSS_PRESET_NOISE_DETUNE_ABLATION,
+        loss_preset=args.loss_preset,
         random_state=args.random_state,
         device=args.device,
         progress=not args.quiet,

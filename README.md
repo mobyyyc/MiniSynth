@@ -247,6 +247,27 @@ The current best proven model family is the v3 pitch-conditioned grouped-head se
 
 `v3.5_noise_detune_loss` keeps v3.4's audibility-aware objective, reduces detune loss when the detuned oscillator is noise, and boosts audible-noise waveform classification. The promoted `v3.6_noise_detune_ablation` keeps the same architecture, data, optimizer, and noise-detune suppression, but removes only that waveform-classification boost.
 
+`v3.7_noise_detune_calibration` is the next controlled experiment. It keeps every v3.6
+variable fixed, but changes the detuned-noise detune-loss multiplier from `0.0` to `0.5`.
+That retains a calibration gradient for noisy detuned oscillators without giving those cases
+the full non-noise detune weight.
+
+```powershell
+& $Python scripts/train_torch.py `
+  --model-id v3.7_noise_detune_calibration `
+  --loss-preset noise_detune_calibration `
+  --tensor-data data/generated/nwsd_v1/train/features `
+  --validation-tensor-data data/generated/nwsd_v1/dev/features `
+  --epochs 50 `
+  --batch-size 128 `
+  --device cuda `
+  --quiet `
+  --model-output models/v3.7_noise_detune_calibration.pt `
+  --metrics-output runs/nwsd_v1/training/v3.7_noise_detune_calibration_metrics.json
+```
+
+The frozen benchmark must not be supplied to training or checkpoint selection.
+
 The v3 defaults are intentionally not exposed as routine CLI switches. If a future
 experiment needs a different architecture or loss, change the code deliberately and
 record that change as the model suffix.

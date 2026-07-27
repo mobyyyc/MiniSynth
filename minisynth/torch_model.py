@@ -52,6 +52,7 @@ LOSS_PRESET_GROUP_BALANCED = "groupbalanced"
 LOSS_PRESET_AUDIBLE = "audible"
 LOSS_PRESET_NOISE_DETUNE = "noise_detune"
 LOSS_PRESET_NOISE_DETUNE_ABLATION = "noise_detune_ablation"
+LOSS_PRESET_NOISE_DETUNE_CALIBRATION = "noise_detune_calibration"
 DEFAULT_LOSS_PRESET = LOSS_PRESET_FLAT
 OPTIMIZER_ADAM = "adam"
 OPTIMIZER_ADAMW = "adamw"
@@ -859,6 +860,7 @@ def parameter_loss_weights(parameters=None, preset=DEFAULT_LOSS_PRESET):
         LOSS_PRESET_AUDIBLE,
         LOSS_PRESET_NOISE_DETUNE,
         LOSS_PRESET_NOISE_DETUNE_ABLATION,
+        LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
     ):
         return torch.ones(len(parameters), dtype=torch.float32)
 
@@ -1018,13 +1020,26 @@ def _boost_noise_wave_weights(base_weights, noise_mask, boost=1.75):
     return boosted / torch.clamp(torch.mean(boosted.detach()), min=1.0e-6)
 
 
-def _suppress_noise_detune_weights(base_weights, noise_mask):
+def _calibrate_noise_detune_weights(base_weights, noise_mask, noise_weight=0.0):
+    """Downweight, but optionally retain, detune loss for detuned-noise targets."""
+    if not 0.0 <= noise_weight <= 1.0:
+        raise ValueError("noise_weight must be between 0 and 1")
     if noise_mask is None:
         return base_weights
-    weights = base_weights * (~noise_mask).to(device=base_weights.device, dtype=base_weights.dtype)
+    multipliers = torch.where(
+        noise_mask.to(device=base_weights.device),
+        torch.as_tensor(noise_weight, dtype=base_weights.dtype, device=base_weights.device),
+        torch.as_tensor(1.0, dtype=base_weights.dtype, device=base_weights.device),
+    )
+    weights = base_weights * multipliers
     if torch.sum(weights.detach()) <= 0.0:
         return weights
     return weights / torch.clamp(torch.mean(weights.detach()), min=1.0e-6)
+
+
+def _suppress_noise_detune_weights(base_weights, noise_mask):
+    """Legacy v3.5/v3.6 behavior: zero detune loss for detuned-noise targets."""
+    return _calibrate_noise_detune_weights(base_weights, noise_mask, noise_weight=0.0)
 
 
 def audible_main_detuned_loss(
@@ -1034,6 +1049,7 @@ def audible_main_detuned_loss(
     features=None,
     noise_aware_detune=False,
     boost_noise_wave=False,
+    noise_detune_weight=0.0,
 ):
     required = {"main_wave", "detuned_wave", "osc_total_level", "detuned_balance", "detune_amount"}
     parameter_indices = _parameter_indices_by_name(model.parameters_schema)
@@ -1085,7 +1101,11 @@ def audible_main_detuned_loss(
             if boost_noise_wave
             else detuned_audibility
         )
-        detune_weights = _suppress_noise_detune_weights(detuned_audibility, detuned_noise_mask)
+        detune_weights = _calibrate_noise_detune_weights(
+            detuned_audibility,
+            detuned_noise_mask,
+            noise_weight=noise_detune_weight,
+        )
     else:
         main_wave_weights = main_audibility
         detuned_wave_weights = detuned_audibility
@@ -1182,6 +1202,16 @@ def inverse_model_loss(
             features=features,
             noise_aware_detune=True,
             boost_noise_wave=False,
+        )
+    if loss_preset == LOSS_PRESET_NOISE_DETUNE_CALIBRATION:
+        return audible_main_detuned_loss(
+            model,
+            predictions,
+            targets,
+            features=features,
+            noise_aware_detune=True,
+            boost_noise_wave=False,
+            noise_detune_weight=0.5,
         )
 
     if model.waveform_mode == WAVEFORM_MODE_CLASSIFICATION:
@@ -2181,6 +2211,7 @@ def train_inverse_model_sharded(
             LOSS_PRESET_AUDIBLE,
             LOSS_PRESET_NOISE_DETUNE,
             LOSS_PRESET_NOISE_DETUNE_ABLATION,
+            LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
         )
         else {},
         "tensor_path": str(tensor_path),
@@ -2535,6 +2566,7 @@ def train_inverse_model(
             LOSS_PRESET_AUDIBLE,
             LOSS_PRESET_NOISE_DETUNE,
             LOSS_PRESET_NOISE_DETUNE_ABLATION,
+            LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
         )
         else {},
         "tensor_path": str(tensor_path),

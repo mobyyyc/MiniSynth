@@ -33,6 +33,7 @@ from minisynth.torch_model import (
     LOSS_PRESET_AUDIBLE,
     LOSS_PRESET_NOISE_DETUNE,
     LOSS_PRESET_NOISE_DETUNE_ABLATION,
+    LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
     load_mel_tensor_npz,
     load_torch_checkpoint,
     parameter_mae_by_name,
@@ -53,6 +54,7 @@ from minisynth.torch_model import (
     waveform_accuracy_by_name,
     weighted_mse_loss,
     _boost_noise_wave_weights,
+    _calibrate_noise_detune_weights,
     _suppress_noise_detune_weights,
     _target_is_noise_wave,
 )
@@ -428,6 +430,17 @@ class TestTorchInverseModel(unittest.TestCase):
         self.assertEqual(weights[0].item(), 0.0)
         self.assertGreater(weights[1].item(), 1.0)
 
+    def test_noise_detune_calibration_retains_bounded_noise_weight(self):
+        calibrated = _calibrate_noise_detune_weights(
+            torch.ones(2),
+            torch.tensor([True, False]),
+            noise_weight=0.5,
+        )
+
+        self.assertGreater(calibrated[0].item(), 0.0)
+        self.assertLess(calibrated[0].item(), calibrated[1].item())
+        self.assertAlmostEqual(float(torch.mean(calibrated)), 1.0)
+
     def test_noise_detune_weights_boost_noise_wave_classification(self):
         base_weights = torch.ones(2)
         boosted = _boost_noise_wave_weights(
@@ -460,6 +473,31 @@ class TestTorchInverseModel(unittest.TestCase):
         self.assertTrue(torch.isfinite(loss))
         self.assertEqual(
             len(parameter_loss_weights(parameters, preset=LOSS_PRESET_NOISE_DETUNE_ABLATION)),
+            len(parameters),
+        )
+
+    def test_noise_detune_calibration_loss_is_supported(self):
+        parameters = target_parameters_for_mode(TARGET_MODE_MAIN_DETUNED_MIX)
+        model = create_inverse_model(
+            output_dim=len(parameters),
+            input_channels=2,
+            waveform_mode="classification",
+            parameters=parameters,
+        )
+        features = torch.zeros(2, 2, DEFAULT_MEL_BINS, 8)
+        targets = torch.full((2, len(parameters)), 0.5)
+
+        loss = inverse_model_loss(
+            model,
+            model(features),
+            targets,
+            features=features,
+            loss_preset=LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
+        )
+
+        self.assertTrue(torch.isfinite(loss))
+        self.assertEqual(
+            len(parameter_loss_weights(parameters, preset=LOSS_PRESET_NOISE_DETUNE_CALIBRATION)),
             len(parameters),
         )
 

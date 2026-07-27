@@ -61,3 +61,9 @@ respectively on the same category. The next v3.7 experiment is therefore a loss-
 noise-detune calibration ablation: replace the current binary suppression of detune loss for a
 noise detuned oscillator with a bounded nonzero weight. It must not change the architecture,
 data release, waveform heads, optimizer, or any other loss term.
+
+The v3.7 multiplier is predeclared as `0.5`, halfway between v3.6's `0.0` and the ordinary
+non-noise weight `1.0`. The primary success measure is a reduction from v3.6's `0.1218`
+wave-correct audible-noise detune MAE, with `<= 0.10` as the practical target. Promotion also
+requires no material aggregate NWSD-v1/product regression, no worsened waveform accuracy, and
+a non-losing fresh blind review; the target is a test gate, not a promised result.

@@ -313,7 +313,8 @@ Next recommended task:
   release-engineering follow-up.
 - [x] Decide whether the current waveform enum target must become continuous wave-mix before aiming for `test_mae <= 0.05`; the v3.6 frozen failure ledger keeps categorical heads because wave-correct audible-noise calibration errors dominate.
 - [x] Add paired benchmark error reporting for oscillator level, detune, and ADSR, split by waveform correctness and audible-noise membership; it selected a loss-only v3.7 detuned-noise calibration ablation.
-- [ ] Implement the v3.7 loss-only detuned-noise calibration preset: replace binary suppression with a bounded nonzero detune weight while keeping every other training variable fixed.
+- [x] Implement the v3.7 loss-only detuned-noise calibration preset: replace binary suppression with a bounded nonzero (`0.5`) detune weight while keeping every other training variable fixed.
+- [ ] Train v3.7 on NWSD-v1 train/dev only, then compare it with v3.6 on frozen NWSD-v1 and product benchmarks before any listening review or promotion decision.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -561,6 +562,10 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-07-26
 
+- Implemented the `v3.7_noise_detune_calibration` loss-only preset. It preserves every v3.6
+  training variable but changes detuned-noise detune loss from binary suppression to a `0.5`
+  normalized weight. Its predeclared primary gate is wave-correct audible-noise detune MAE
+  `<= 0.10` versus v3.6's `0.1218`, with no material frozen-benchmark regression.
 - Added paired product-benchmark calibration reporting for oscillator total level, detuned
   balance, detune, and ADSR, split by waveform correctness and audible-noise membership. The
   v3.6 validation run confirms wave-correct audible-noise detune MAE `0.1218` and decay MAE
