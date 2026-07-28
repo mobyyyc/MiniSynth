@@ -44,9 +44,24 @@ envelope, and detune regressions. The 439.442 quiet-mix worst case is driven chi
 oscillator-level error. Because the candidate fails both aggregate layers and its primary
 target, no blinded listening review is warranted.
 
+## Regression diagnosis
+
+The v3.7 change did not reveal a useful detune-loss direction. It increased all aggregate
+main/detuned diagnostic errors: main-wave error `0.0315 -> 0.0345`, detuned-wave error
+`0.0362 -> 0.0398`, total-level error `0.3319 -> 0.3358`, balance error `0.0751 -> 0.0799`,
+and normalized detune error `0.0842 -> 0.0867`. Product wave-label mistakes doubled from five
+to ten, including a new quiet-mix noise-to-square mistake in the worst quiet case.
+
+Both oscillator-level predictions remain under-dispersed relative to their targets, and v3.7
+contracts them further: osc1-level standard-deviation ratio `0.5610 -> 0.5386`; osc2-level
+ratio `0.5996 -> 0.5721`. The quiet-mix problem is therefore primarily oscillator-level
+calibration and prediction-spread collapse. It already existed in v3.6 and the detune-loss
+change made it worse; it is not evidence for another detune multiplier or wave-target change.
+
 ## Follow-up
 
-Do not tune the multiplier further from this one result. First inspect the loss-weight and
-prediction-distribution behavior behind the quiet-mix regression, then select one new
-evidence-backed hypothesis. The rejected v3.7 checkpoint and compact reports remain local,
-ignored experiment artifacts; the shipped and research control remains v3.6.
+Do not tune the multiplier further. The next experiment-design task is a single oscillator-
+level calibration hypothesis that directly addresses prediction-spread collapse, while keeping
+the v3.6 detune weighting and categorical waveform heads as controls. The rejected v3.7
+checkpoint and compact reports remain local, ignored experiment artifacts; the shipped and
+research control remains v3.6.

@@ -913,8 +913,10 @@ all other loss terms fixed until evidence supports a target-schema change.
 
 v3.7 failed its objective gate: the small primary detune improvement did not meet the
 predeclared target and materially regressed both aggregate benchmark layers. Retain v3.6;
-inspect loss-weight/prediction-distribution behavior before selecting another one-variable
-experiment. Do not use a blind review to rescue an objective failure.
+its regression diagnosis shows further oscillator-level prediction-spread collapse and more
+wave-label errors. The next one-variable experiment must address oscillator-level calibration,
+not detune weighting or target-schema changes. Do not use a blind review to rescue an
+objective failure.
 
 ### Milestone I: Product Prototype - Windows Desktop App
 

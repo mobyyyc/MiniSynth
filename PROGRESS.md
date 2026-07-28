@@ -315,7 +315,8 @@ Next recommended task:
 - [x] Add paired benchmark error reporting for oscillator level, detune, and ADSR, split by waveform correctness and audible-noise membership; it selected a loss-only v3.7 detuned-noise calibration ablation.
 - [x] Implement the v3.7 loss-only detuned-noise calibration preset: replace binary suppression with a bounded nonzero (`0.5`) detune weight while keeping every other training variable fixed.
 - [x] Train v3.7 on NWSD-v1 train/dev only, then compare it with v3.6 on frozen NWSD-v1 and product benchmarks before any listening review or promotion decision. v3.7 is rejected on both aggregate layers; no blind review is warranted.
-- [ ] Analyze v3.7's quiet-mix regression through loss-weight and prediction-distribution diagnostics before selecting one new v3.8 hypothesis.
+- [x] Analyze v3.7's quiet-mix regression through loss-weight and prediction-distribution diagnostics. The detune change further contracts oscillator-level prediction spread and increases waveform mistakes.
+- [ ] Design one v3.8 oscillator-level calibration experiment that directly targets prediction-spread collapse while preserving v3.6 detune weighting and categorical waveform heads.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -563,6 +564,11 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-07-27
 
+- Diagnosed v3.7's quiet-mix regression: the detune calibration change increased every
+  aggregate main/detuned diagnostic error, doubled product waveform-label mistakes from `5`
+  to `10`, and further reduced oscillator-level prediction spread (osc1 std ratio `0.5610` to
+  `0.5386`; osc2 `0.5996` to `0.5721`). The next hypothesis must target oscillator-level
+  calibration, not detune weighting or continuous wave-mix targets.
 - Trained and objectively evaluated `v3.7_noise_detune_calibration`. It selected epoch 31 but
   regressed NWSD-v1 mean weighted distance from `26.29` to `28.36` and product mean from
   `20.74` to `40.76`. Its primary wave-correct audible-noise detune MAE improved only from
