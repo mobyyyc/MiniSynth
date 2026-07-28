@@ -911,6 +911,11 @@ intervention: replace only the binary detuned-noise loss suppression with a boun
 weight (`0.5` for v3.7). Keep categorical waveform heads, data, architecture, optimizer, and
 all other loss terms fixed until evidence supports a target-schema change.
 
+v3.7 failed its objective gate: the small primary detune improvement did not meet the
+predeclared target and materially regressed both aggregate benchmark layers. Retain v3.6;
+inspect loss-weight/prediction-distribution behavior before selecting another one-variable
+experiment. Do not use a blind review to rescue an objective failure.
+
 ### Milestone I: Product Prototype - Windows Desktop App
 
 Goal: turn NeuroWave from a research CLI into a usable single-platform desktop application

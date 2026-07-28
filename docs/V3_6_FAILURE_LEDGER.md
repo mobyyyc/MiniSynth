@@ -67,3 +67,7 @@ non-noise weight `1.0`. The primary success measure is a reduction from v3.6's `
 wave-correct audible-noise detune MAE, with `<= 0.10` as the practical target. Promotion also
 requires no material aggregate NWSD-v1/product regression, no worsened waveform accuracy, and
 a non-losing fresh blind review; the target is a test gate, not a promised result.
+
+v3.7 did not pass that gate. Its wave-correct audible-noise detune MAE reached `0.1199`, but
+its NWSD-v1 mean worsened to `28.359` and its product mean to `40.758`. See
+`docs/V3_7_EVALUATION.md`; v3.6 remains the control and active model.
