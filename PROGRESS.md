@@ -316,7 +316,7 @@ Next recommended task:
 - [x] Implement the v3.7 loss-only detuned-noise calibration preset: replace binary suppression with a bounded nonzero (`0.5`) detune weight while keeping every other training variable fixed.
 - [x] Train v3.7 on NWSD-v1 train/dev only, then compare it with v3.6 on frozen NWSD-v1 and product benchmarks before any listening review or promotion decision. v3.7 is rejected on both aggregate layers; no blind review is warranted.
 - [x] Analyze v3.7's quiet-mix regression through loss-weight and prediction-distribution diagnostics. The detune change further contracts oscillator-level prediction spread and increases waveform mistakes.
-- [x] Design the `v3.8_quiet_total_overshoot` experiment: double only v3.6's existing quiet-target total-level overshoot penalty, with pre-registered quiet-level, rendered-audio, prediction-spread, and aggregate-regression gates.
+- [x] Implement and test the pre-registered `v3.8_quiet_total_overshoot` loss preset while keeping the v3.6 control behavior unchanged.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -564,6 +564,9 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-07-28
 
+- Implemented `quiet_total_overshoot`: it preserves the v3.6 loss configuration and doubles
+  only quiet-target `osc_total_level` overshoot loss. Added the training CLI choice and a
+  focused regression test; the candidate has not been trained.
 - Pre-registered `v3.8_quiet_total_overshoot`, a single-variable calibration experiment that
   doubles only the existing quiet-target oscillator-total-level overshoot penalty. It preserves
   v3.6's data, architecture, categorical waveform heads, and zero detuned-noise weight. The

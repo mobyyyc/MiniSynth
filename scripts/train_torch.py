@@ -15,6 +15,7 @@ from minisynth.torch_model import (
     DEFAULT_LEARNING_RATE,
     LOSS_PRESET_NOISE_DETUNE_ABLATION,
     LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
+    LOSS_PRESET_QUIET_TOTAL_OVERSHOOT,
     HEAD_MODE_GROUPED,
     MODEL_SIZE_LARGE,
     OPTIMIZER_ADAMW,
@@ -103,7 +104,11 @@ def parse_args():
     )
     parser.add_argument(
         "--loss-preset",
-        choices=(LOSS_PRESET_NOISE_DETUNE_ABLATION, LOSS_PRESET_NOISE_DETUNE_CALIBRATION),
+        choices=(
+            LOSS_PRESET_NOISE_DETUNE_ABLATION,
+            LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
+            LOSS_PRESET_QUIET_TOTAL_OVERSHOOT,
+        ),
         default=LOSS_PRESET_NOISE_DETUNE_ABLATION,
         help="Controlled experiment loss preset; defaults to the current v3.6 baseline.",
     )

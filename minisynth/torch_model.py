@@ -53,6 +53,7 @@ LOSS_PRESET_AUDIBLE = "audible"
 LOSS_PRESET_NOISE_DETUNE = "noise_detune"
 LOSS_PRESET_NOISE_DETUNE_ABLATION = "noise_detune_ablation"
 LOSS_PRESET_NOISE_DETUNE_CALIBRATION = "noise_detune_calibration"
+LOSS_PRESET_QUIET_TOTAL_OVERSHOOT = "quiet_total_overshoot"
 DEFAULT_LOSS_PRESET = LOSS_PRESET_FLAT
 OPTIMIZER_ADAM = "adam"
 OPTIMIZER_ADAMW = "adamw"
@@ -861,6 +862,7 @@ def parameter_loss_weights(parameters=None, preset=DEFAULT_LOSS_PRESET):
         LOSS_PRESET_NOISE_DETUNE,
         LOSS_PRESET_NOISE_DETUNE_ABLATION,
         LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
+        LOSS_PRESET_QUIET_TOTAL_OVERSHOOT,
     ):
         return torch.ones(len(parameters), dtype=torch.float32)
 
@@ -1050,7 +1052,10 @@ def audible_main_detuned_loss(
     noise_aware_detune=False,
     boost_noise_wave=False,
     noise_detune_weight=0.0,
+    quiet_total_overshoot_multiplier=1.0,
 ):
+    if quiet_total_overshoot_multiplier < 0.0:
+        raise ValueError("quiet_total_overshoot_multiplier must be non-negative")
     required = {"main_wave", "detuned_wave", "osc_total_level", "detuned_balance", "detune_amount"}
     parameter_indices = _parameter_indices_by_name(model.parameters_schema)
     if not required.issubset(parameter_indices):
@@ -1141,7 +1146,8 @@ def audible_main_detuned_loss(
                     overshoot = torch.clamp(raw["continuous"][:, position] - targets[:, index], min=0.0)
                     component_losses.append(
                         torch.mean(errors)
-                        + _weighted_sample_mean(torch.square(overshoot), quiet_total_weight)
+                        + quiet_total_overshoot_multiplier
+                        * _weighted_sample_mean(torch.square(overshoot), quiet_total_weight)
                     )
                 elif name == "detuned_balance":
                     component_losses.append(_weighted_sample_mean(errors, total_audibility))
@@ -1212,6 +1218,16 @@ def inverse_model_loss(
             noise_aware_detune=True,
             boost_noise_wave=False,
             noise_detune_weight=0.5,
+        )
+    if loss_preset == LOSS_PRESET_QUIET_TOTAL_OVERSHOOT:
+        return audible_main_detuned_loss(
+            model,
+            predictions,
+            targets,
+            features=features,
+            noise_aware_detune=True,
+            boost_noise_wave=False,
+            quiet_total_overshoot_multiplier=2.0,
         )
 
     if model.waveform_mode == WAVEFORM_MODE_CLASSIFICATION:

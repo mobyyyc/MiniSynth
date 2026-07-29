@@ -34,6 +34,7 @@ from minisynth.torch_model import (
     LOSS_PRESET_NOISE_DETUNE,
     LOSS_PRESET_NOISE_DETUNE_ABLATION,
     LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
+    LOSS_PRESET_QUIET_TOTAL_OVERSHOOT,
     load_mel_tensor_npz,
     load_torch_checkpoint,
     parameter_mae_by_name,
@@ -498,6 +499,39 @@ class TestTorchInverseModel(unittest.TestCase):
         self.assertTrue(torch.isfinite(loss))
         self.assertEqual(
             len(parameter_loss_weights(parameters, preset=LOSS_PRESET_NOISE_DETUNE_CALIBRATION)),
+            len(parameters),
+        )
+
+    def test_quiet_total_overshoot_preset_only_strengthens_quiet_overprediction(self):
+        parameters = target_parameters_for_mode(TARGET_MODE_MAIN_DETUNED_MIX)
+        model = create_inverse_model(
+            output_dim=len(parameters),
+            input_channels=2,
+            waveform_mode="classification",
+            parameters=parameters,
+        )
+        features = torch.zeros(2, 2, DEFAULT_MEL_BINS, 8)
+        targets = torch.zeros(2, len(parameters))
+
+        baseline_loss = inverse_model_loss(
+            model,
+            model(features),
+            targets,
+            features=features,
+            loss_preset=LOSS_PRESET_NOISE_DETUNE_ABLATION,
+        )
+        candidate_loss = inverse_model_loss(
+            model,
+            model(features),
+            targets,
+            features=features,
+            loss_preset=LOSS_PRESET_QUIET_TOTAL_OVERSHOOT,
+        )
+
+        self.assertTrue(torch.isfinite(candidate_loss))
+        self.assertGreater(candidate_loss.item(), baseline_loss.item())
+        self.assertEqual(
+            len(parameter_loss_weights(parameters, preset=LOSS_PRESET_QUIET_TOTAL_OVERSHOOT)),
             len(parameters),
         )
 

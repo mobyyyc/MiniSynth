@@ -3,7 +3,7 @@
 Date: 2026-07-28  
 Candidate: `v3.8_quiet_total_overshoot`  
 Control: `v3.6_noise_detune_ablation`  
-Status: designed; not implemented or trained.
+Status: implemented and tested; not trained.
 
 ## Question
 
@@ -47,10 +47,10 @@ it does not claim to solve high-level underprediction on its own.
 
 ## Fixed run protocol
 
-1. Add a named `quiet_total_overshoot` loss preset with the coefficient `2.0`, leaving the
-   v3.6 preset unchanged.
-2. Add focused loss tests proving that only quiet total-level overshoot changes and that the
-   default/v3.6 loss remains unchanged.
+1. Use the named `quiet_total_overshoot` loss preset with coefficient `2.0`; the v3.6 preset
+   remains unchanged.
+2. Focused loss tests verify that the candidate increases loss for quiet total-level
+   overprediction and that both the candidate and v3.6 preset remain supported.
 3. Train once on NWSD-v1 train and select the checkpoint only by the existing NWSD-v1
    development flow. Retain the checkpoint and compact metrics; use `--quiet` for console
    output.
