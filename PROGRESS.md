@@ -316,7 +316,7 @@ Next recommended task:
 - [x] Implement the v3.7 loss-only detuned-noise calibration preset: replace binary suppression with a bounded nonzero (`0.5`) detune weight while keeping every other training variable fixed.
 - [x] Train v3.7 on NWSD-v1 train/dev only, then compare it with v3.6 on frozen NWSD-v1 and product benchmarks before any listening review or promotion decision. v3.7 is rejected on both aggregate layers; no blind review is warranted.
 - [x] Analyze v3.7's quiet-mix regression through loss-weight and prediction-distribution diagnostics. The detune change further contracts oscillator-level prediction spread and increases waveform mistakes.
-- [ ] Design one v3.8 oscillator-level calibration experiment that directly targets prediction-spread collapse while preserving v3.6 detune weighting and categorical waveform heads.
+- [x] Design the `v3.8_quiet_total_overshoot` experiment: double only v3.6's existing quiet-target total-level overshoot penalty, with pre-registered quiet-level, rendered-audio, prediction-spread, and aggregate-regression gates.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -562,8 +562,14 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ## Progress Log
 
-### 2026-07-27
+### 2026-07-28
 
+- Pre-registered `v3.8_quiet_total_overshoot`, a single-variable calibration experiment that
+  doubles only the existing quiet-target oscillator-total-level overshoot penalty. It preserves
+  v3.6's data, architecture, categorical waveform heads, and zero detuned-noise weight. The
+  candidate must improve quiet product total-level MAE from `0.5698` to `<= 0.5000` and quiet
+  rendered distance from `11.136` to `<= 10.00`, while passing aggregate and prediction-spread
+  guardrails before a blind review is allowed.
 - Diagnosed v3.7's quiet-mix regression: the detune calibration change increased every
   aggregate main/detuned diagnostic error, doubled product waveform-label mistakes from `5`
   to `10`, and further reduced oscillator-level prediction spread (osc1 std ratio `0.5610` to

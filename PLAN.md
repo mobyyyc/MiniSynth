@@ -918,6 +918,34 @@ wave-label errors. The next one-variable experiment must address oscillator-leve
 not detune weighting or target-schema changes. Do not use a blind review to rescue an
 objective failure.
 
+### v3.8 Quiet-Total-Level Calibration Experiment
+
+The pre-registered v3.8 candidate is `v3.8_quiet_total_overshoot`. It retains the NWSD-v1
+train/development split, v3.6 large grouped CNN, categorical waveform heads, main/detuned
+target representation, optimizer, schedule, seed, and v3.6 detuned-noise suppression. Its
+only change is to multiply the existing quiet-target `osc_total_level` overshoot penalty by
+`2.0`. The ordinary squared total-level error remains unchanged. This directly addresses the
+measured failure: v3.6's six quiet product cases have total-level MAE `0.5698`, caused by
+overprediction, while its oscillator-level output spread is contracted.
+
+The multiplier is deliberately modest: it strengthens an established asymmetric penalty
+instead of adding a new target, sampler, model head, or detune intervention. All loss terms
+outside quiet-target total-level overprediction must remain bit-for-bit equivalent to v3.6.
+
+Before a blind review, the candidate must pass all objective gates:
+
+1. Product quiet-mix total-level MAE is at most `0.5000` (v3.6: `0.5698`) and quiet-mix mean
+   weighted distance is at most `10.00` (v3.6: `11.136`).
+2. The frozen NWSD-v1 mean weighted distance is no worse than `27.08` (3% above v3.6's
+   `26.288`) and product mean weighted distance is no worse than `21.36` (3% above v3.6's
+   `20.738`), with zero failed renders.
+3. Quiet product cases retain zero waveform-label mistakes, and the NWSD-v1 oscillator-level
+   prediction-spread ratios both reach at least `0.60` without a worse total-level MAE.
+
+If any gate fails, reject v3.8 without a listening review and retain v3.6. If all pass, prepare
+a fresh balanced v3.6-versus-v3.8 review; promote only if that review does not prefer v3.6
+overall.
+
 ### Milestone I: Product Prototype - Windows Desktop App
 
 Goal: turn NeuroWave from a research CLI into a usable single-platform desktop application
