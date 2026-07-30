@@ -1,7 +1,7 @@
 # Next-Generation Inverse-Model Strategy
 
 Date: 2026-07-30  
-Status: v3.9 target-mode setup implemented and tested; not trained.  
+Status: v3.9 target-mode setup implemented and tested; not trained.
 Control: `v3.6_noise_detune_ablation`
 
 ## Executive decision
