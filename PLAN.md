@@ -946,6 +946,13 @@ If any gate fails, reject v3.8 without a listening review and retain v3.6. If al
 a fresh balanced v3.6-versus-v3.8 review; promote only if that review does not prefer v3.6
 overall.
 
+v3.8 failed its objective gate. Although quiet product total-level MAE improved modestly from
+`0.5698` to `0.5322`, it missed the `<= 0.5000` target, quiet-mix rendered distance rose from
+`11.136` to `36.767`, and both aggregate benchmark means regressed. Its oscillator-level
+prediction-spread ratios also fell to `0.4880` and `0.5303`. Reject v3.8 without listening
+review; do not sweep the overshoot coefficient. The next hypothesis must come from a new
+diagnostic mechanism for prediction-spread collapse while retaining v3.6 as control.
+
 ### Milestone I: Product Prototype - Windows Desktop App
 
 Goal: turn NeuroWave from a research CLI into a usable single-platform desktop application

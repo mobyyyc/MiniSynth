@@ -317,6 +317,7 @@ Next recommended task:
 - [x] Train v3.7 on NWSD-v1 train/dev only, then compare it with v3.6 on frozen NWSD-v1 and product benchmarks before any listening review or promotion decision. v3.7 is rejected on both aggregate layers; no blind review is warranted.
 - [x] Analyze v3.7's quiet-mix regression through loss-weight and prediction-distribution diagnostics. The detune change further contracts oscillator-level prediction spread and increases waveform mistakes.
 - [x] Implement and test the pre-registered `v3.8_quiet_total_overshoot` loss preset while keeping the v3.6 control behavior unchanged.
+- [x] Evaluate v3.8 on the frozen NWSD-v1 and product benchmarks. Reject it without blind review: it misses the quiet-level gate and regresses quiet and aggregate rendered-audio distance.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -561,6 +562,15 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 - [ ] Commit Milestone J completion.
 
 ## Progress Log
+
+### 2026-07-30
+
+- Trained and evaluated `v3.8_quiet_total_overshoot` on the frozen 2,000-clip NWSD-v1 and
+  36-case product benchmarks. It improved quiet product total-level MAE only from `0.5698` to
+  `0.5322`, missing its `<= 0.5000` gate; quiet-mix distance regressed from `11.136` to
+  `36.767`, NWSD mean rose from `26.288` to `28.811`, and product mean from `20.738` to
+  `26.493`. Oscillator prediction spread also contracted. v3.8 is rejected without a blind
+  review; v3.6 remains active.
 
 ### 2026-07-28
 

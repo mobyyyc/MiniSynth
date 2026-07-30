@@ -3,7 +3,7 @@
 Date: 2026-07-28  
 Candidate: `v3.8_quiet_total_overshoot`  
 Control: `v3.6_noise_detune_ablation`  
-Status: implemented and tested; not trained.
+Status: rejected after frozen evaluation; v3.6 remains active.
 
 ## Question
 
@@ -77,6 +77,30 @@ The first two rows are the primary success criteria. The aggregate limits are gu
 targets to optimize. A candidate that fails any row is rejected without blind review. A
 candidate passing every row receives a new balanced v3.6-versus-v3.8 blind review; it can only
 replace v3.6 if that review does not favor v3.6 overall.
+
+## Frozen evaluation result
+
+Training selected epoch 31. The candidate was evaluated once on the immutable 2,000-clip
+NWSD-v1 benchmark and once on the fixed 36-case product benchmark on 2026-07-30. It fails the
+pre-registered objective gates and is rejected without a blind review.
+
+| Gate | v3.6 control | v3.8 result | Decision |
+| --- | ---: | ---: | --- |
+| Quiet product total-level MAE | 0.5698 | 0.5322 | Improved, but misses `<= 0.5000` |
+| Quiet product mean weighted distance | 11.136 | 36.767 | Fail |
+| Quiet product waveform-label mistakes | 0 | 0 | Pass |
+| NWSD osc1 level prediction-spread ratio | 0.5610 | 0.4880 | Fail |
+| NWSD osc2 level prediction-spread ratio | 0.5996 | 0.5303 | Fail |
+| NWSD total-level MAE | 0.3319 | 0.3631 | Fail |
+| NWSD mean weighted distance | 26.288 | 28.811 | Fail (`<= 27.08`) |
+| Product mean weighted distance | 20.738 | 26.493 | Fail (`<= 21.36`) |
+| Failed renders on either benchmark | 0 | 0 | Pass |
+
+The stronger one-sided loss reduced quiet-target level error slightly but contracted both
+oscillator-level prediction distributions further and made quiet rendered sound substantially
+worse. This rejects the coefficient direction itself: do not tune another multiplier value.
+The next experiment must use the saved diagnostics to identify a different, single-variable
+mechanism for restoring level spread.
 
 ## Interpretation rules
 

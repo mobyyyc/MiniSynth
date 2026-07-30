@@ -248,13 +248,13 @@ The current best proven model family is the v3 pitch-conditioned grouped-head se
 `v3.5_noise_detune_loss` keeps v3.4's audibility-aware objective, reduces detune loss when the detuned oscillator is noise, and boosts audible-noise waveform classification. The promoted `v3.6_noise_detune_ablation` keeps the same architecture, data, optimizer, and noise-detune suppression, but removes only that waveform-classification boost.
 
 `v3.7_noise_detune_calibration` was rejected: its retained detuned-noise calibration gradient
-materially regressed both frozen benchmark layers. The next controlled candidate is
-`v3.8_quiet_total_overshoot`. It keeps v3.6 fixed and doubles only the existing asymmetric
-penalty for overpredicting oscillator total level on quiet targets. This targets the observed
-quiet-mix loudness hallucination without changing waveform heads or detune weighting. See
-`docs/V3_8_EXPERIMENT.md` for the fixed promotion gates.
+materially regressed both frozen benchmark layers. `v3.8_quiet_total_overshoot` was also
+rejected: its stronger quiet-target overshoot penalty regressed quiet and aggregate rendered
+audio despite a small total-level MAE improvement. `v3.6_noise_detune_ablation` remains the
+active model. See `docs/V3_8_EXPERIMENT.md` for the recorded gates and decision.
 
 ```powershell
+# Historical v3.8 reproduction command; do not treat its checkpoint as a candidate for release.
 & $Python scripts/train_torch.py `
   --model-id v3.8_quiet_total_overshoot `
   --loss-preset quiet_total_overshoot `
