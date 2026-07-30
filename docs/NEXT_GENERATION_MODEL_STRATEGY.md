@@ -1,13 +1,13 @@
 # Next-Generation Inverse-Model Strategy
 
 Date: 2026-07-30  
-Status: research and design proposal only; no v4 model code is implemented.  
+Status: v3.9 target-mode setup implemented and tested; not trained.  
 Control: `v3.6_noise_detune_ablation`
 
 ## Executive decision
 
 Do not begin with another loss weight, a larger encoder, a continuous waveform target, or a
-multi-hypothesis model. The next generation should be `v4.0_gain_invariant_mix`: retain the
+multi-hypothesis model. The next generation should be `v3.9_gain_invariant_mix`: retain the
 v3.6 encoder, categorical waveform heads, pitch context, and detuned-noise suppression, but
 replace the unidentifiable `osc_total_level` target with a canonical gain-invariant oscillator
 representation. It is a target-schema correction, not a loss tweak.
@@ -110,24 +110,24 @@ separate architecture-and-training change and must not be confounded with this c
 2. **Metric correction:** retain existing diagnostics for legacy comparison, but stop using
    total-level MAE or raw per-oscillator level spread as v4 promotion gates. Add canonical
    ratio/balance error and render-equivalence checks instead.
-3. **Isolated v4.0 experiment:** hold the NWSD-v1 data, encoder, categorical waveform heads,
+3. **Isolated v3.9 experiment:** hold the NWSD-v1 data, encoder, categorical waveform heads,
    pitch context, optimizer, schedule, seed, and v3.6 detune behavior fixed. Train one
-   `v4.0_gain_invariant_mix` checkpoint using the new target mode.
+   `v3.9_gain_invariant_mix` checkpoint using the new target mode.
 4. **Frozen evaluation:** evaluate once on the 2,000-clip NWSD-v1 benchmark and once on the
    36-case product benchmark. Keep the v3.6 audio reports as the control; do not compare raw
    total-level labels across representations.
-5. **Promotion decision:** run a fresh balanced blind v3.6-versus-v4.0 review only if all
-   objective gates pass. If v4.0 fails, inspect waveform/balance/detune/envelope errors before
+5. **Promotion decision:** run a fresh balanced blind v3.6-versus-v3.9 review only if all
+   objective gates pass. If v3.9 fails, inspect waveform/balance/detune/envelope errors before
    considering an architecture change.
-6. **Post-v4 research:** only after a fair target representation has been tested, compare a
+6. **Post-v3.9 research:** only after a fair target representation has been tested, compare a
    renderer-aware reconstruction objective or a small multi-hypothesis/refinement path against
-   v4.0 in separately pre-registered experiments.
+   v3.9 in separately pre-registered experiments.
 
-## v4.0 proposed design and gates
+## v3.9 proposed design and gates
 
 ### Controlled design
 
-- Model ID: `v4.0_gain_invariant_mix`.
+- Model ID: `v3.9_gain_invariant_mix`.
 - Target mode: `gain_invariant_main_detuned_mix`.
 - Inputs: current relative log-mel tensor plus current known-pitch channel.
 - Targets: length, main waveform class, detuned balance, detuned waveform class, detune amount,
@@ -140,7 +140,7 @@ separate architecture-and-training change and must not be confounded with this c
 
 ### Pre-registered gates
 
-| Gate | v3.6 control | v4.0 requirement |
+| Gate | v3.6 control | v3.9 requirement |
 | --- | ---: | ---: |
 | Canonical reconstruction render equivalence | n/a | exact/near-zero error on a dedicated test set |
 | NWSD mean weighted distance | 26.288 | `<= 26.288` |
@@ -156,7 +156,6 @@ global-level spread gate because global level is intentionally not inferable or 
 
 ## What approval would authorize next
 
-Approval would authorize only the v4.0 setup: source changes for the target mode,
-reconstruction, diagnostics, unit tests, and documentation. It would not authorize training.
-After that setup is tested and committed, training remains a separate user-run step with a
-specific command.
+The approved v3.9 setup now includes the target mode, canonical reconstruction,
+gain-invariant diagnostics, unit tests, and documentation. Training remains a separate
+user-run step with the documented command.

@@ -251,7 +251,9 @@ The current best proven model family is the v3 pitch-conditioned grouped-head se
 materially regressed both frozen benchmark layers. `v3.8_quiet_total_overshoot` was also
 rejected: its stronger quiet-target overshoot penalty regressed quiet and aggregate rendered
 audio despite a small total-level MAE improvement. `v3.6_noise_detune_ablation` remains the
-active model. See `docs/V3_8_EXPERIMENT.md` for the recorded gates and decision.
+active model. The next untrained candidate, `v3.9_gain_invariant_mix`, removes the global
+oscillator-total target because current rendering and mel features intentionally discard common
+gain. See `docs/NEXT_GENERATION_MODEL_STRATEGY.md` for the recorded evidence and gates.
 
 ```powershell
 # Historical v3.8 reproduction command; do not treat its checkpoint as a candidate for release.
@@ -266,6 +268,23 @@ active model. See `docs/V3_8_EXPERIMENT.md` for the recorded gates and decision.
   --quiet `
   --model-output models/v3.8_quiet_total_overshoot.pt `
   --metrics-output runs/nwsd_v1/training/v3.8_quiet_total_overshoot_metrics.json
+```
+
+When v3.9 training is approved, train the gain-invariant candidate with:
+
+```powershell
+& $Python scripts/train_torch.py `
+  --model-id v3.9_gain_invariant_mix `
+  --target-mode gain_invariant_main_detuned_mix `
+  --loss-preset noise_detune_ablation `
+  --tensor-data data/generated/nwsd_v1/train/features `
+  --validation-tensor-data data/generated/nwsd_v1/dev/features `
+  --epochs 50 `
+  --batch-size 128 `
+  --device cuda `
+  --quiet `
+  --model-output models/v3.9_gain_invariant_mix.pt `
+  --metrics-output runs/nwsd_v1/training/v3.9_gain_invariant_mix_metrics.json
 ```
 
 The frozen benchmark must not be supplied to training or checkpoint selection.

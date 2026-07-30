@@ -959,11 +959,11 @@ The v3.6-v3.8 research loop identified an invalid target rather than a loss-weig
 the renderer peak-normalizes every clip and the mel extractor uses a per-clip maximum reference,
 so global oscillator total level is absent from the model input. The next generation must remove
 that false inverse target before testing a new architecture. The research-backed proposal is
-`v4.0_gain_invariant_mix`: predict only relative oscillator balance and reconstruct a fixed
+`v3.9_gain_invariant_mix`: predict only relative oscillator balance and reconstruct a fixed
 total level, while preserving v3.6's encoder, categorical waveform heads, and detuned-noise
 suppression. See `docs/NEXT_GENERATION_MODEL_STRATEGY.md` for the proof, deferred research
-options, controlled design, and pre-registered gates. Do not implement or train it without
-explicit approval.
+options, controlled design, and pre-registered gates. The setup is approved; training remains
+a separate approval step.
 
 ### Milestone I: Product Prototype - Windows Desktop App
 

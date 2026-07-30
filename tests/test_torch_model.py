@@ -11,7 +11,7 @@ import torch
 from minisynth.dataset import DEFAULT_MEL_TENSOR_FRAMES
 from minisynth.engine import render_patch
 from minisynth.io import load_patch
-from minisynth.schema import VECTOR_PARAMETERS
+from minisynth.schema import SynthConfig, VECTOR_PARAMETERS
 from minisynth.torch_model import (
     DEFAULT_MEL_BINS,
     DEFAULT_HEAD_MODE,
@@ -19,6 +19,7 @@ from minisynth.torch_model import (
     DEFAULT_POOLING_MODE,
     DEFAULT_TARGET_MODE,
     TARGET_MODE_MAIN_DETUNED_MIX,
+    TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX,
     TARGET_MODE_OSCILLATOR_MIX,
     DEFAULT_WAVEFORM_MODE,
     MelSpectrogramInverseModel,
@@ -368,6 +369,74 @@ class TestTorchInverseModel(unittest.TestCase):
         self.assertAlmostEqual(patch["osc1_level"], 0.75)
         self.assertAlmostEqual(patch["osc2_level"], 0.25)
         self.assertAlmostEqual(patch["osc2_detune"], -600.0)
+
+    def test_gain_invariant_main_detuned_targets_exclude_total_level_and_preserve_render(self):
+        source_patch = SynthConfig(
+            freq=440.0,
+            length=1.4,
+            osc1_wave="saw",
+            osc1_level=0.2,
+            osc2_wave="square",
+            osc2_level=0.3,
+            osc2_detune=17.0,
+            cutoff=2400.0,
+            resonance=0.2,
+            attack=0.02,
+            decay=0.2,
+            sustain=0.7,
+            release=0.2,
+        ).to_render_kwargs()
+        features = np.zeros((1, 1, DEFAULT_MEL_BINS, 8), dtype=np.float32)
+        targets = np.asarray([SynthConfig(**source_patch).to_vector()], dtype=np.float32)
+
+        prepared = prepare_model_arrays(
+            features,
+            targets,
+            target_mode=TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX,
+        )
+        parameter_names = [parameter.name for parameter in prepared["parameters"]]
+        reconstructed = patch_from_model_vector(
+            prepared["targets"][0],
+            prepared["parameters"],
+            freq=source_patch["freq"],
+        )
+
+        self.assertNotIn("osc_total_level", parameter_names)
+        self.assertAlmostEqual(
+            prepared["targets"][0, parameter_names.index("detuned_balance")],
+            0.6,
+        )
+        self.assertAlmostEqual(reconstructed["osc1_level"], 0.4)
+        self.assertAlmostEqual(reconstructed["osc2_level"], 0.6)
+        scaled_equivalent = dict(reconstructed)
+        scaled_equivalent["osc1_level"] = 0.2
+        scaled_equivalent["osc2_level"] = 0.3
+        np.testing.assert_allclose(
+            render_patch(**scaled_equivalent),
+            render_patch(**reconstructed),
+            atol=1.0e-7,
+        )
+
+    def test_gain_invariant_main_detuned_targets_support_v3_6_loss_behavior(self):
+        parameters = target_parameters_for_mode(TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX)
+        model = create_inverse_model(
+            output_dim=len(parameters),
+            input_channels=2,
+            waveform_mode="classification",
+            parameters=parameters,
+        )
+        features = torch.zeros(2, 2, DEFAULT_MEL_BINS, 8)
+        targets = torch.full((2, len(parameters)), 0.5)
+
+        loss = inverse_model_loss(
+            model,
+            model(features),
+            targets,
+            features=features,
+            loss_preset=LOSS_PRESET_NOISE_DETUNE_ABLATION,
+        )
+
+        self.assertTrue(torch.isfinite(loss))
 
     def test_audible_loss_weights_loud_detuned_wave_more_than_quiet(self):
         parameters = target_parameters_for_mode(TARGET_MODE_MAIN_DETUNED_MIX)

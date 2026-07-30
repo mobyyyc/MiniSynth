@@ -174,6 +174,17 @@ def main_detuned_error_report(target_patch, predicted_patch):
     }
 
 
+def gain_invariant_main_detuned_error_report(target_patch, predicted_patch):
+    """Report only main/detuned properties observable after global gain normalization."""
+    report = main_detuned_error_report(target_patch, predicted_patch)
+    return {
+        "main_wave_error": report["main_wave_error"],
+        "detuned_wave_error": report["detuned_wave_error"],
+        "detuned_balance": report["detuned_balance"],
+        "detune": report["detune"],
+    }
+
+
 def summarize_main_detuned_errors(results):
     reports = [
         result["main_detuned_errors"]
@@ -194,6 +205,33 @@ def summarize_main_detuned_errors(results):
         ),
         "mean_total_level_error": float(
             sum(report["total_level"]["absolute_error"] for report in reports) / count
+        ),
+        "mean_detuned_balance_error": float(
+            sum(report["detuned_balance"]["absolute_error"] for report in reports) / count
+        ),
+        "mean_normalized_detune_error": float(
+            sum(report["detune"]["normalized_absolute_error"] for report in reports) / count
+        ),
+    }
+
+
+def summarize_gain_invariant_main_detuned_errors(results):
+    reports = [
+        result["gain_invariant_main_detuned_errors"]
+        for result in results
+        if "gain_invariant_main_detuned_errors" in result
+    ]
+    if not reports:
+        return {}
+
+    count = len(reports)
+    return {
+        "count": count,
+        "mean_main_wave_error": float(
+            sum(report["main_wave_error"] for report in reports) / count
+        ),
+        "mean_detuned_wave_error": float(
+            sum(report["detuned_wave_error"] for report in reports) / count
         ),
         "mean_detuned_balance_error": float(
             sum(report["detuned_balance"]["absolute_error"] for report in reports) / count

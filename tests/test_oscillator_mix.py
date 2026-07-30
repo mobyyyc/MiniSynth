@@ -1,10 +1,12 @@
 import unittest
 
 from minisynth.oscillator_mix import (
+    gain_invariant_main_detuned_error_report,
     main_detuned_error_report,
     oscillator_balance,
     oscillator_level_by_wave,
     oscillator_mix_error_report,
+    summarize_gain_invariant_main_detuned_errors,
     summarize_main_detuned_errors,
     summarize_oscillator_mix_errors,
 )
@@ -113,6 +115,33 @@ class TestOscillatorMix(unittest.TestCase):
         self.assertAlmostEqual(report["detune"]["normalized_absolute_error"], 0.05)
         self.assertEqual(summary["count"], 1)
         self.assertAlmostEqual(summary["mean_detuned_balance_error"], 0.25)
+
+    def test_gain_invariant_main_detuned_errors_exclude_total_level(self):
+        target = {
+            "osc1_wave": "saw",
+            "osc1_level": 0.2,
+            "osc2_wave": "sine",
+            "osc2_level": 0.3,
+            "osc2_detune": 120.0,
+        }
+        predicted = {
+            "osc1_wave": "saw",
+            "osc1_level": 0.4,
+            "osc2_wave": "sine",
+            "osc2_level": 0.6,
+            "osc2_detune": 120.0,
+        }
+
+        report = gain_invariant_main_detuned_error_report(target, predicted)
+        summary = summarize_gain_invariant_main_detuned_errors(
+            [{"gain_invariant_main_detuned_errors": report}]
+        )
+
+        self.assertNotIn("total_level", report)
+        self.assertEqual(report["main_wave_error"], 0.0)
+        self.assertEqual(report["detuned_wave_error"], 0.0)
+        self.assertAlmostEqual(report["detuned_balance"]["absolute_error"], 0.0)
+        self.assertAlmostEqual(summary["mean_normalized_detune_error"], 0.0)
 
 
 if __name__ == "__main__":

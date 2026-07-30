@@ -44,6 +44,7 @@ TARGET_MODE_FULL = "full"
 TARGET_MODE_PITCH_CONDITIONED_TIMBRE = "pitch_conditioned_timbre"
 TARGET_MODE_OSCILLATOR_MIX = "oscillator_mix"
 TARGET_MODE_MAIN_DETUNED_MIX = "main_detuned_mix"
+TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX = "gain_invariant_main_detuned_mix"
 DEFAULT_TARGET_MODE = TARGET_MODE_FULL
 LOSS_PRESET_FLAT = "flat"
 LOSS_PRESET_AUDIBILITY = "audibility"
@@ -151,6 +152,11 @@ MAIN_DETUNED_MIX_PARAMETERS = (
     next(parameter for parameter in VECTOR_PARAMETERS if parameter.name == "decay"),
     next(parameter for parameter in VECTOR_PARAMETERS if parameter.name == "sustain"),
     next(parameter for parameter in VECTOR_PARAMETERS if parameter.name == "release"),
+)
+GAIN_INVARIANT_MAIN_DETUNED_MIX_PARAMETERS = tuple(
+    parameter
+    for parameter in MAIN_DETUNED_MIX_PARAMETERS
+    if parameter.name != "osc_total_level"
 )
 MODEL_SIZE_SPECS = {
     MODEL_SIZE_SMALL: {
@@ -313,6 +319,8 @@ def target_parameters_for_mode(target_mode=DEFAULT_TARGET_MODE):
         return OSCILLATOR_MIX_PARAMETERS
     if target_mode == TARGET_MODE_MAIN_DETUNED_MIX:
         return MAIN_DETUNED_MIX_PARAMETERS
+    if target_mode == TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX:
+        return GAIN_INVARIANT_MAIN_DETUNED_MIX_PARAMETERS
 
     raise ValueError(f"Unsupported target mode: {target_mode}")
 
@@ -776,13 +784,13 @@ def oscillator_mix_targets(full_targets):
     return np.asarray(rows, dtype=np.float32)
 
 
-def main_detuned_mix_targets(full_targets):
+def main_detuned_mix_targets(full_targets, parameters=MAIN_DETUNED_MIX_PARAMETERS):
     source = np.asarray(full_targets, dtype=np.float32)
     rows = []
     for row in source:
         patch = config_from_vector(row, parameters=VECTOR_PARAMETERS).to_render_kwargs()
         values = []
-        for parameter in MAIN_DETUNED_MIX_PARAMETERS:
+        for parameter in parameters:
             if parameter.name == "main_wave":
                 values.append(normalize_parameter_value(parameter, patch["osc1_wave"]))
             elif parameter.name == "detuned_wave":
@@ -806,12 +814,18 @@ def prepare_model_arrays(features, targets, target_mode=DEFAULT_TARGET_MODE):
         TARGET_MODE_PITCH_CONDITIONED_TIMBRE,
         TARGET_MODE_OSCILLATOR_MIX,
         TARGET_MODE_MAIN_DETUNED_MIX,
+        TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX,
     ):
         x = add_pitch_context_channel(x, targets)
     if target_mode == TARGET_MODE_OSCILLATOR_MIX:
         target_values = oscillator_mix_targets(targets)
     elif target_mode == TARGET_MODE_MAIN_DETUNED_MIX:
         target_values = main_detuned_mix_targets(targets)
+    elif target_mode == TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX:
+        target_values = main_detuned_mix_targets(
+            targets,
+            parameters=GAIN_INVARIANT_MAIN_DETUNED_MIX_PARAMETERS,
+        )
     else:
         target_values = targets_for_parameters(targets, parameters)
 
@@ -1056,7 +1070,7 @@ def audible_main_detuned_loss(
 ):
     if quiet_total_overshoot_multiplier < 0.0:
         raise ValueError("quiet_total_overshoot_multiplier must be non-negative")
-    required = {"main_wave", "detuned_wave", "osc_total_level", "detuned_balance", "detune_amount"}
+    required = {"main_wave", "detuned_wave", "detuned_balance", "detune_amount"}
     parameter_indices = _parameter_indices_by_name(model.parameters_schema)
     if not required.issubset(parameter_indices):
         return group_balanced_loss(
@@ -1073,16 +1087,23 @@ def audible_main_detuned_loss(
         raw = None
 
     continuous_positions = _continuous_positions_by_name(model.parameters_schema)
-    total_index = parameter_indices["osc_total_level"]
     balance_index = parameter_indices["detuned_balance"]
-    total_level = torch.clamp(targets[:, total_index] * 2.0, 0.0, 2.0)
+    total_index = parameter_indices.get("osc_total_level")
+    if total_index is None:
+        total_level = torch.ones(len(targets), dtype=targets.dtype, device=targets.device)
+    else:
+        total_level = torch.clamp(targets[:, total_index] * 2.0, 0.0, 2.0)
     detuned_balance = torch.clamp(targets[:, balance_index], 0.0, 1.0)
     main_level = torch.clamp(total_level * (1.0 - detuned_balance), 0.0, 1.0)
     detuned_level = torch.clamp(total_level * detuned_balance, 0.0, 1.0)
     total_audibility = _normalized_audibility_weights(torch.clamp(total_level / 2.0, 0.0, 1.0))
     main_audibility = _normalized_audibility_weights(main_level)
     detuned_audibility = _normalized_audibility_weights(detuned_level)
-    quiet_total_weight = _normalized_audibility_weights(1.0 - torch.clamp(targets[:, total_index], 0.0, 1.0))
+    quiet_total_weight = (
+        _normalized_audibility_weights(1.0 - torch.clamp(targets[:, total_index], 0.0, 1.0))
+        if total_index is not None
+        else None
+    )
     main_noise_mask = _target_is_noise_wave(
         targets,
         parameter_indices,
@@ -2051,6 +2072,7 @@ def train_inverse_model_sharded(
         TARGET_MODE_PITCH_CONDITIONED_TIMBRE,
         TARGET_MODE_OSCILLATOR_MIX,
         TARGET_MODE_MAIN_DETUNED_MIX,
+        TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX,
     ):
         input_channels += 1
 
@@ -2791,11 +2813,12 @@ def patch_from_model_vector(vector, parameters, freq=None):
         value for value in (osc_balance_value, detuned_balance_value) if value is not None
     ]
     if osc_total_level is not None or balance_values:
-        if osc_total_level is None or len(balance_values) != 1:
-            raise ValueError("oscillator mix predictions require total level and one balance")
+        if len(balance_values) != 1:
+            raise ValueError("oscillator mix predictions require exactly one balance")
         balance = balance_values[0]
-        values["osc1_level"] = float(np.clip(osc_total_level * (1.0 - balance), 0.0, 1.0))
-        values["osc2_level"] = float(np.clip(osc_total_level * balance, 0.0, 1.0))
+        total_level = 1.0 if osc_total_level is None else osc_total_level
+        values["osc1_level"] = float(np.clip(total_level * (1.0 - balance), 0.0, 1.0))
+        values["osc2_level"] = float(np.clip(total_level * balance, 0.0, 1.0))
 
     if "freq" not in values:
         if freq is None:

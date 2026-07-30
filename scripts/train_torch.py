@@ -22,6 +22,7 @@ from minisynth.torch_model import (
     POOLING_TIME_FREQUENCY,
     SCHEDULER_STEP,
     CHECKPOINT_BEST_VALIDATION,
+    TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX,
     TARGET_MODE_MAIN_DETUNED_MIX,
     WAVEFORM_MODE_CLASSIFICATION,
     save_torch_checkpoint,
@@ -103,6 +104,12 @@ def parse_args():
         help="Disable epoch/batch progress output.",
     )
     parser.add_argument(
+        "--target-mode",
+        choices=(TARGET_MODE_MAIN_DETUNED_MIX, TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX),
+        default=TARGET_MODE_MAIN_DETUNED_MIX,
+        help="Target representation; defaults to the v3.6 control representation.",
+    )
+    parser.add_argument(
         "--loss-preset",
         choices=(
             LOSS_PRESET_NOISE_DETUNE_ABLATION,
@@ -154,7 +161,7 @@ def main() -> int:
         pooling_mode=POOLING_TIME_FREQUENCY,
         head_mode=HEAD_MODE_GROUPED,
         waveform_mode=WAVEFORM_MODE_CLASSIFICATION,
-        target_mode=TARGET_MODE_MAIN_DETUNED_MIX,
+        target_mode=args.target_mode,
         loss_preset=args.loss_preset,
         random_state=args.random_state,
         device=args.device,
