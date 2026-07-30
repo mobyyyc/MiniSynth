@@ -318,6 +318,7 @@ Next recommended task:
 - [x] Analyze v3.7's quiet-mix regression through loss-weight and prediction-distribution diagnostics. The detune change further contracts oscillator-level prediction spread and increases waveform mistakes.
 - [x] Implement and test the pre-registered `v3.8_quiet_total_overshoot` loss preset while keeping the v3.6 control behavior unchanged.
 - [x] Evaluate v3.8 on the frozen NWSD-v1 and product benchmarks. Reject it without blind review: it misses the quiet-level gate and regresses quiet and aggregate rendered-audio distance.
+- [x] Research and diagnose the next-generation inverse-model strategy. The next proposal is `v4.0_gain_invariant_mix`, which removes the unidentifiable global oscillator-total target; await approval before implementing it.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -565,6 +566,11 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-07-30
 
+- Completed the next-generation strategy audit. The current renderer peak-normalization and
+  per-clip mel reference make common oscillator-level scale unobservable: scaled patches
+  produced exactly identical audio and mel tensors in a numerical counterfactual. Literature
+  review and model diagnostics support correcting the target representation before adding
+  capacity or probabilistic heads. Proposed, but did not implement, `v4.0_gain_invariant_mix`.
 - Trained and evaluated `v3.8_quiet_total_overshoot` on the frozen 2,000-clip NWSD-v1 and
   36-case product benchmarks. It improved quiet product total-level MAE only from `0.5698` to
   `0.5322`, missing its `<= 0.5000` gate; quiet-mix distance regressed from `11.136` to
