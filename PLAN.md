@@ -972,6 +972,12 @@ slightly. Retain v3.6; do not restore the invalid total-level target merely to i
 comparison. The next research task is a focused diagnosis of v3.9's balance regression and the
 loss coupling introduced by canonical gain reconstruction.
 
+That diagnosis found the key confound: v3.9 removed `osc_total_level` and also replaced v3.6's
+source-total-weighted `detuned_balance` curriculum with uniform balance weighting. The next
+design task must isolate that loss change: keep gain-invariant targets and inference, then test
+only v3.6's legacy source-total balance weighting during synthetic training. The total level
+must not return as an inference target. See `docs/V3_9_BALANCE_DIAGNOSIS.md`.
+
 ### Milestone I: Product Prototype - Windows Desktop App
 
 Goal: turn NeuroWave from a research CLI into a usable single-platform desktop application

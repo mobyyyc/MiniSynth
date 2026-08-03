@@ -321,6 +321,7 @@ Next recommended task:
 - [x] Research and diagnose the next-generation inverse-model strategy. The approved `v3.9_gain_invariant_mix` proposal removes the unidentifiable global oscillator-total target.
 - [x] Implement and test `v3.9_gain_invariant_mix`: a gain-invariant target mode, canonical reconstruction, and gain-invariant diagnostics. Do not train yet.
 - [x] Evaluate v3.9 on the frozen NWSD-v1 and product benchmarks. Reject it without blind review: gain-invariant target removal regresses rendered audio and balance accuracy.
+- [x] Diagnose v3.9's balance regression. It changed both the output target and v3.6's source-total-weighted balance curriculum; the next design must isolate legacy balance weighting without restoring total-level inference.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -568,6 +569,10 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-08-02
 
+- Diagnosed v3.9's balance regression. Removing `osc_total_level` also made the audibility loss
+  weight every balance example equally instead of using v3.6's `0.3766–1.7630` source-total
+  curriculum. The following hypothesis should isolate that training-only balance weighting while
+  retaining gain-invariant inference; no next-model code was changed.
 - Trained and evaluated `v3.9_gain_invariant_mix` on the frozen NWSD-v1 and product
   benchmarks. It failed all three primary audio gates: NWSD mean rose from `26.288` to
   `27.540`, product mean from `20.738` to `29.218`, and quiet-mix mean from `11.136` to
