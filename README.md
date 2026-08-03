@@ -251,9 +251,10 @@ The current best proven model family is the v3 pitch-conditioned grouped-head se
 materially regressed both frozen benchmark layers. `v3.8_quiet_total_overshoot` was also
 rejected: its stronger quiet-target overshoot penalty regressed quiet and aggregate rendered
 audio despite a small total-level MAE improvement. `v3.6_noise_detune_ablation` remains the
-active model. The next untrained candidate, `v3.9_gain_invariant_mix`, removes the global
+active model. The `v3.9_gain_invariant_mix` candidate removes the global
 oscillator-total target because current rendering and mel features intentionally discard common
-gain. See `docs/NEXT_GENERATION_MODEL_STRATEGY.md` for the recorded evidence and gates.
+gain; its frozen evaluation nevertheless regressed rendered-audio and balance metrics, so it is
+also rejected. See `docs/NEXT_GENERATION_MODEL_STRATEGY.md` for the recorded evidence and gates.
 
 ```powershell
 # Historical v3.8 reproduction command; do not treat its checkpoint as a candidate for release.

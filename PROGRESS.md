@@ -320,6 +320,7 @@ Next recommended task:
 - [x] Evaluate v3.8 on the frozen NWSD-v1 and product benchmarks. Reject it without blind review: it misses the quiet-level gate and regresses quiet and aggregate rendered-audio distance.
 - [x] Research and diagnose the next-generation inverse-model strategy. The approved `v3.9_gain_invariant_mix` proposal removes the unidentifiable global oscillator-total target.
 - [x] Implement and test `v3.9_gain_invariant_mix`: a gain-invariant target mode, canonical reconstruction, and gain-invariant diagnostics. Do not train yet.
+- [x] Evaluate v3.9 on the frozen NWSD-v1 and product benchmarks. Reject it without blind review: gain-invariant target removal regresses rendered audio and balance accuracy.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -564,6 +565,14 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 - [ ] Commit Milestone J completion.
 
 ## Progress Log
+
+### 2026-08-02
+
+- Trained and evaluated `v3.9_gain_invariant_mix` on the frozen NWSD-v1 and product
+  benchmarks. It failed all three primary audio gates: NWSD mean rose from `26.288` to
+  `27.540`, product mean from `20.738` to `29.218`, and quiet-mix mean from `11.136` to
+  `38.846`. Quiet balance MAE rose from `0.0512` to `0.0708` despite correct wave labels.
+  v3.9 is rejected without blind review; v3.6 remains active.
 
 ### 2026-07-30
 

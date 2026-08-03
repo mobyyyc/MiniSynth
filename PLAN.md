@@ -965,6 +965,13 @@ suppression. See `docs/NEXT_GENERATION_MODEL_STRATEGY.md` for the proof, deferre
 options, controlled design, and pre-registered gates. The setup is approved; training remains
 a separate approval step.
 
+`v3.9_gain_invariant_mix` was rejected after its frozen evaluation. It preserves the
+gain-invariance proof but fails the practical model test: NWSD mean weighted distance rose to
+`27.540`, product mean to `29.218`, and quiet-mix mean to `38.846`. Its balance MAE also rose
+slightly. Retain v3.6; do not restore the invalid total-level target merely to improve this
+comparison. The next research task is a focused diagnosis of v3.9's balance regression and the
+loss coupling introduced by canonical gain reconstruction.
+
 ### Milestone I: Product Prototype - Windows Desktop App
 
 Goal: turn NeuroWave from a research CLI into a usable single-platform desktop application

@@ -154,6 +154,28 @@ The first three audio measures are primary. The balance and waveform rows preven
 audio gain from hiding a regression in the audible oscillator representation. There is no
 global-level spread gate because global level is intentionally not inferable or predicted.
 
+## v3.9 frozen evaluation result
+
+The setup was trained once, selecting epoch 31, then evaluated once on the immutable 2,000-clip
+NWSD-v1 benchmark and once on the fixed 36-case product benchmark on 2026-08-02. v3.9 fails its
+pre-registered audio and balance gates and is rejected without a blind review.
+
+| Gate | v3.6 control | v3.9 result | Decision |
+| --- | ---: | ---: | --- |
+| NWSD mean weighted distance | 26.288 | 27.540 | Fail |
+| Product mean weighted distance | 20.738 | 29.218 | Fail |
+| Product quiet-mix mean distance | 11.136 | 38.846 | Fail |
+| NWSD detuned-balance MAE | 0.0751 | 0.0758 | Fail |
+| NWSD main-wave error | 0.0315 | 0.0315 | Pass |
+| NWSD detuned-wave error | 0.0363 | 0.0369 | Pass within tolerance |
+| Failed renders | 0 | 0 | Pass |
+
+The representation proof remains valid: common oscillator-level scale is unobservable under the
+current renderer and mel extractor. But removing that target did not improve the trained model:
+quiet-mix balance MAE worsened from `0.0512` to `0.0708`, while wave labels remained correct.
+This indicates the next investigation must diagnose the learned balance representation and loss
+coupling, rather than restoring an unidentifiable total-level target or adding a blind review.
+
 ## What approval would authorize next
 
 The approved v3.9 setup now includes the target mode, canonical reconstruction,
