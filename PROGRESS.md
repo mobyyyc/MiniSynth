@@ -322,6 +322,7 @@ Next recommended task:
 - [x] Implement and test `v3.9_gain_invariant_mix`: a gain-invariant target mode, canonical reconstruction, and gain-invariant diagnostics. Do not train yet.
 - [x] Evaluate v3.9 on the frozen NWSD-v1 and product benchmarks. Reject it without blind review: gain-invariant target removal regresses rendered audio and balance accuracy.
 - [x] Diagnose v3.9's balance regression. It changed both the output target and v3.6's source-total-weighted balance curriculum; the next design must isolate legacy balance weighting without restoring total-level inference.
+- [x] Pre-register the v3.10 gain-invariant legacy-balance-curriculum experiment and its promotion gates before implementation.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -569,6 +570,11 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-08-02
 
+- Pre-registered `v3.10_gain_invariant_balance_curriculum` before implementation. It retains
+  v3.9's 11-output gain-invariant model and canonical inference, while restoring only v3.6's
+  source-total-weighted `detuned_balance` curriculum through detached training sidecar
+  metadata. The fixed controls, evaluation protocol, and promotion gates are in
+  `docs/V3_10_EXPERIMENT_PLAN.md`.
 - Diagnosed v3.9's balance regression. Removing `osc_total_level` also made the audibility loss
   weight every balance example equally instead of using v3.6's `0.3766–1.7630` source-total
   curriculum. The following hypothesis should isolate that training-only balance weighting while

@@ -978,6 +978,13 @@ design task must isolate that loss change: keep gain-invariant targets and infer
 only v3.6's legacy source-total balance weighting during synthetic training. The total level
 must not return as an inference target. See `docs/V3_9_BALANCE_DIAGNOSIS.md`.
 
+The pre-registered v3.10 candidate, `v3.10_gain_invariant_balance_curriculum`, makes that
+single loss-only comparison explicit. It will carry the original source oscillator total as
+detached training-only sidecar metadata, restoring v3.6's normalized audibility weights only
+for `detuned_balance`; the 11-target gain-invariant model and canonical inference remain
+unchanged. Its fixed controls, frozen evaluation protocol, and all-or-nothing promotion gates
+are recorded in `docs/V3_10_EXPERIMENT_PLAN.md` before implementation.
+
 ### Milestone I: Product Prototype - Windows Desktop App
 
 Goal: turn NeuroWave from a research CLI into a usable single-platform desktop application
