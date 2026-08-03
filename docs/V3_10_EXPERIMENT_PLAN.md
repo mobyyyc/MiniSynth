@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-02  
 **Candidate:** `v3.10_gain_invariant_balance_curriculum`  
-**Status:** Pre-registered; not implemented or trained
+**Status:** Implemented and unit-tested; not trained
 
 ## Question
 
@@ -44,6 +44,11 @@ Implementation must carry this sidecar through sharded tensor batching separatel
 features and supervised targets, and pass it only to the loss calculation. Tests must prove
 that it cannot change the target layout, checkpoint output dimension, or inference API.
 
+Implementation preserves the ordinary two-tensor batch interface unless this loss preset is
+selected. With `legacy_balance_curriculum`, sharded and unsharded training pass a third,
+one-dimensional sidecar tensor only into the loss. The preset rejects missing sidecar metadata
+instead of silently falling back to uniform balance weighting.
+
 ## Evaluation contract
 
 Use the existing fixed evaluation protocols and frozen manifests:
@@ -71,4 +76,3 @@ The candidate must satisfy all of the following before a blind test or promotion
 Failure of any gate rejects v3.10 without hyperparameter sweeping. The next research decision
 would then isolate the removed-head effect separately; it must not reintroduce total level as
 an inference target.
-

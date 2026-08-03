@@ -323,6 +323,7 @@ Next recommended task:
 - [x] Evaluate v3.9 on the frozen NWSD-v1 and product benchmarks. Reject it without blind review: gain-invariant target removal regresses rendered audio and balance accuracy.
 - [x] Diagnose v3.9's balance regression. It changed both the output target and v3.6's source-total-weighted balance curriculum; the next design must isolate legacy balance weighting without restoring total-level inference.
 - [x] Pre-register the v3.10 gain-invariant legacy-balance-curriculum experiment and its promotion gates before implementation.
+- [x] Implement and test v3.10's detached source-total sidecar loss path. The gain-invariant target layout and inference interface remain unchanged; do not train yet.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -570,6 +571,11 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 
 ### 2026-08-02
 
+- Implemented `legacy_balance_curriculum` for v3.10. It derives detached source oscillator
+  totals from the original tensor targets, carries them through the selected training and
+  validation batches only, and applies v3.6-style normalized audibility weights exclusively to
+  `detuned_balance`. The 11-output gain-invariant layout, checkpoint shape, and inference API
+  are unchanged. Focused PyTorch tests (65) and the full suite (253) pass.
 - Pre-registered `v3.10_gain_invariant_balance_curriculum` before implementation. It retains
   v3.9's 11-output gain-invariant model and canonical inference, while restoring only v3.6's
   source-total-weighted `detuned_balance` curriculum through detached training sidecar

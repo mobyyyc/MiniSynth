@@ -55,6 +55,7 @@ LOSS_PRESET_NOISE_DETUNE = "noise_detune"
 LOSS_PRESET_NOISE_DETUNE_ABLATION = "noise_detune_ablation"
 LOSS_PRESET_NOISE_DETUNE_CALIBRATION = "noise_detune_calibration"
 LOSS_PRESET_QUIET_TOTAL_OVERSHOOT = "quiet_total_overshoot"
+LOSS_PRESET_LEGACY_BALANCE_CURRICULUM = "legacy_balance_curriculum"
 DEFAULT_LOSS_PRESET = LOSS_PRESET_FLAT
 OPTIMIZER_ADAM = "adam"
 OPTIMIZER_ADAMW = "adamw"
@@ -75,6 +76,10 @@ DEFAULT_POOLING_MODE = POOLING_TIME_FREQUENCY
 HEAD_MODE_SHARED = "shared"
 HEAD_MODE_GROUPED = "grouped"
 DEFAULT_HEAD_MODE = HEAD_MODE_SHARED
+
+
+def loss_preset_requires_source_total_levels(loss_preset):
+    return loss_preset == LOSS_PRESET_LEGACY_BALANCE_CURRICULUM
 OSC_TOTAL_LEVEL_PARAMETER = Parameter(
     "osc_total_level",
     "float",
@@ -833,17 +838,40 @@ def prepare_model_arrays(features, targets, target_mode=DEFAULT_TARGET_MODE):
         "features": x,
         "targets": target_values,
         "parameters": parameters,
+        "source_total_levels": source_oscillator_total_levels(targets),
     }
 
 
-def tensor_loader(features, targets, batch_size=DEFAULT_BATCH_SIZE, shuffle=True):
+def source_oscillator_total_levels(targets):
+    source_targets = np.asarray(targets, dtype=np.float32)
+    if source_targets.ndim != 2 or source_targets.shape[1] != len(VECTOR_PARAMETERS):
+        raise ValueError("targets must have one normalized value per source parameter")
+    names = [parameter.name for parameter in VECTOR_PARAMETERS]
+    main_levels = source_targets[:, names.index("osc1_level")]
+    detuned_levels = source_targets[:, names.index("osc2_level")]
+    return np.clip((main_levels + detuned_levels) / 2.0, 0.0, 1.0).astype(np.float32)
+
+
+def tensor_loader(
+    features,
+    targets,
+    batch_size=DEFAULT_BATCH_SIZE,
+    shuffle=True,
+    source_total_levels=None,
+):
     if batch_size < 1:
         raise ValueError("batch_size must be at least 1")
 
-    dataset = TensorDataset(
+    tensors = [
         torch.as_tensor(features, dtype=torch.float32),
         torch.as_tensor(targets, dtype=torch.float32),
-    )
+    ]
+    if source_total_levels is not None:
+        source_total_levels = np.asarray(source_total_levels, dtype=np.float32)
+        if source_total_levels.ndim != 1 or len(source_total_levels) != len(features):
+            raise ValueError("source_total_levels must have one value per feature row")
+        tensors.append(torch.as_tensor(source_total_levels, dtype=torch.float32))
+    dataset = TensorDataset(*tensors)
     return DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
 
 
@@ -877,6 +905,7 @@ def parameter_loss_weights(parameters=None, preset=DEFAULT_LOSS_PRESET):
         LOSS_PRESET_NOISE_DETUNE_ABLATION,
         LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
         LOSS_PRESET_QUIET_TOTAL_OVERSHOOT,
+        LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
     ):
         return torch.ones(len(parameters), dtype=torch.float32)
 
@@ -1067,6 +1096,7 @@ def audible_main_detuned_loss(
     boost_noise_wave=False,
     noise_detune_weight=0.0,
     quiet_total_overshoot_multiplier=1.0,
+    source_total_levels=None,
 ):
     if quiet_total_overshoot_multiplier < 0.0:
         raise ValueError("quiet_total_overshoot_multiplier must be non-negative")
@@ -1097,6 +1127,15 @@ def audible_main_detuned_loss(
     main_level = torch.clamp(total_level * (1.0 - detuned_balance), 0.0, 1.0)
     detuned_level = torch.clamp(total_level * detuned_balance, 0.0, 1.0)
     total_audibility = _normalized_audibility_weights(torch.clamp(total_level / 2.0, 0.0, 1.0))
+    if source_total_levels is not None:
+        source_total_levels = torch.as_tensor(source_total_levels)
+        if source_total_levels.ndim != 1 or len(source_total_levels) != len(targets):
+            raise ValueError("source_total_levels must have one value per target row")
+        balance_audibility = _normalized_audibility_weights(
+            torch.clamp(source_total_levels.to(device=targets.device, dtype=targets.dtype), 0.0, 1.0)
+        )
+    else:
+        balance_audibility = total_audibility
     main_audibility = _normalized_audibility_weights(main_level)
     detuned_audibility = _normalized_audibility_weights(detuned_level)
     quiet_total_weight = (
@@ -1171,7 +1210,7 @@ def audible_main_detuned_loss(
                         * _weighted_sample_mean(torch.square(overshoot), quiet_total_weight)
                     )
                 elif name == "detuned_balance":
-                    component_losses.append(_weighted_sample_mean(errors, total_audibility))
+                    component_losses.append(_weighted_sample_mean(errors, balance_audibility))
                 elif name == "detune_amount":
                     component_losses.append(_weighted_sample_mean(errors, detune_weights))
                 else:
@@ -1197,6 +1236,7 @@ def inverse_model_loss(
     loss_function=None,
     loss_weights=None,
     loss_preset=DEFAULT_LOSS_PRESET,
+    source_total_levels=None,
 ):
     if loss_preset == LOSS_PRESET_GROUP_BALANCED:
         return group_balanced_loss(
@@ -1249,6 +1289,18 @@ def inverse_model_loss(
             noise_aware_detune=True,
             boost_noise_wave=False,
             quiet_total_overshoot_multiplier=2.0,
+        )
+    if loss_preset == LOSS_PRESET_LEGACY_BALANCE_CURRICULUM:
+        if source_total_levels is None:
+            raise ValueError("legacy_balance_curriculum requires source_total_levels sidecar metadata")
+        return audible_main_detuned_loss(
+            model,
+            predictions,
+            targets,
+            features=features,
+            noise_aware_detune=True,
+            boost_noise_wave=False,
+            source_total_levels=source_total_levels,
         )
 
     if model.waveform_mode == WAVEFORM_MODE_CLASSIFICATION:
@@ -1310,19 +1362,31 @@ def dataset_loss_torch(
     batch_size=DEFAULT_BATCH_SIZE,
     loss_weights=None,
     loss_preset=DEFAULT_LOSS_PRESET,
+    source_total_levels=None,
 ):
     if device is None:
         device = select_torch_device()
 
     model = model.to(device)
     model.eval()
-    loader = tensor_loader(features, targets, batch_size=batch_size, shuffle=False)
+    loader = tensor_loader(
+        features,
+        targets,
+        batch_size=batch_size,
+        shuffle=False,
+        source_total_levels=source_total_levels,
+    )
     loss_function = nn.MSELoss()
     running_loss = 0.0
     sample_count = 0
 
     with torch.no_grad():
-        for batch_features, batch_targets in loader:
+        for batch in loader:
+            if source_total_levels is None:
+                batch_features, batch_targets = batch
+                batch_source_totals = None
+            else:
+                batch_features, batch_targets, batch_source_totals = batch
             batch_features = batch_features.to(device)
             batch_targets = batch_targets.to(device)
             predictions = model(batch_features)
@@ -1334,6 +1398,7 @@ def dataset_loss_torch(
                 loss_function=loss_function,
                 loss_weights=loss_weights,
                 loss_preset=loss_preset,
+                source_total_levels=batch_source_totals,
             )
             running_loss += loss.item() * len(batch_features)
             sample_count += len(batch_features)
@@ -1743,6 +1808,7 @@ def iter_sharded_tensor_batches(
     target_mode=DEFAULT_TARGET_MODE,
     shuffle=True,
     random_state=0,
+    include_source_total_levels=False,
 ):
     if batch_size < 1:
         raise ValueError("batch_size must be at least 1")
@@ -1775,10 +1841,15 @@ def iter_sharded_tensor_batches(
 
         for batch_start in range(0, len(order), batch_size):
             batch_order = order[batch_start : batch_start + batch_size]
-            yield (
+            batch = (
                 torch.as_tensor(prepared["features"][batch_order], dtype=torch.float32),
                 torch.as_tensor(prepared["targets"][batch_order], dtype=torch.float32),
             )
+            if include_source_total_levels:
+                batch += (
+                    torch.as_tensor(prepared["source_total_levels"][batch_order], dtype=torch.float32),
+                )
+            yield batch
 
 
 def sharded_sample_loss_torch(
@@ -1801,13 +1872,19 @@ def sharded_sample_loss_torch(
     sample_count = 0
 
     with torch.no_grad():
-        for batch_features, batch_targets in iter_sharded_tensor_batches(
+        for batch in iter_sharded_tensor_batches(
             source,
             sample_indices,
             batch_size=batch_size,
             target_mode=target_mode,
             shuffle=False,
+            include_source_total_levels=loss_preset_requires_source_total_levels(loss_preset),
         ):
+            if loss_preset_requires_source_total_levels(loss_preset):
+                batch_features, batch_targets, batch_source_totals = batch
+            else:
+                batch_features, batch_targets = batch
+                batch_source_totals = None
             batch_features = batch_features.to(device)
             batch_targets = batch_targets.to(device)
             predictions = model(batch_features)
@@ -1819,6 +1896,7 @@ def sharded_sample_loss_torch(
                 loss_function=loss_function,
                 loss_weights=loss_weights,
                 loss_preset=loss_preset,
+                source_total_levels=batch_source_totals,
             )
             running_loss += loss.item() * len(batch_features)
             sample_count += len(batch_features)
@@ -2139,7 +2217,7 @@ def train_inverse_model_sharded(
         if progress:
             print(f"Epoch {epoch + 1}/{epochs} starting on {device.type}.")
 
-        for batch_index, (batch_features, batch_targets) in enumerate(
+        for batch_index, batch in enumerate(
             iter_sharded_tensor_batches(
                 source,
                 split["train_indices"],
@@ -2147,9 +2225,15 @@ def train_inverse_model_sharded(
                 target_mode=target_mode,
                 shuffle=True,
                 random_state=random_state + epoch,
+                include_source_total_levels=loss_preset_requires_source_total_levels(loss_preset),
             ),
             start=1,
         ):
+            if loss_preset_requires_source_total_levels(loss_preset):
+                batch_features, batch_targets, batch_source_totals = batch
+            else:
+                batch_features, batch_targets = batch
+                batch_source_totals = None
             batch_features = batch_features.to(device)
             batch_targets = batch_targets.to(device)
             optimizer.zero_grad()
@@ -2162,6 +2246,7 @@ def train_inverse_model_sharded(
                 loss_function=loss_function,
                 loss_weights=loss_weights,
                 loss_preset=loss_preset,
+                source_total_levels=batch_source_totals,
             )
             loss.backward()
             optimizer.step()
@@ -2250,6 +2335,7 @@ def train_inverse_model_sharded(
             LOSS_PRESET_NOISE_DETUNE,
             LOSS_PRESET_NOISE_DETUNE_ABLATION,
             LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
+            LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
         )
         else {},
         "tensor_path": str(tensor_path),
@@ -2461,6 +2547,11 @@ def train_inverse_model(
         benchmark_size=benchmark_size,
         random_state=random_state,
     )
+    split["train_source_total_levels"] = prepared["source_total_levels"][split["train_indices"]]
+    split["test_source_total_levels"] = prepared["source_total_levels"][split["test_indices"]]
+    split["benchmark_source_total_levels"] = prepared["source_total_levels"][
+        split["benchmark_indices"]
+    ]
     model = create_inverse_model(
         output_dim=prepared["targets"].shape[1],
         waveform_mode=waveform_mode,
@@ -2505,11 +2596,21 @@ def train_inverse_model(
             split["train_targets"],
             batch_size=batch_size,
             shuffle=True,
+            source_total_levels=(
+                split["train_source_total_levels"]
+                if loss_preset_requires_source_total_levels(loss_preset)
+                else None
+            ),
         )
         total_batches = len(loader)
         if progress:
             print(f"Epoch {epoch + 1}/{epochs} starting on {device.type}.")
-        for batch_index, (batch_features, batch_targets) in enumerate(loader, start=1):
+        for batch_index, batch in enumerate(loader, start=1):
+            if loss_preset_requires_source_total_levels(loss_preset):
+                batch_features, batch_targets, batch_source_totals = batch
+            else:
+                batch_features, batch_targets = batch
+                batch_source_totals = None
             batch_features = batch_features.to(device)
             batch_targets = batch_targets.to(device)
             optimizer.zero_grad()
@@ -2522,6 +2623,7 @@ def train_inverse_model(
                 loss_function=loss_function,
                 loss_weights=loss_weights,
                 loss_preset=loss_preset,
+                source_total_levels=batch_source_totals,
             )
             loss.backward()
             optimizer.step()
@@ -2545,6 +2647,11 @@ def train_inverse_model(
             batch_size=batch_size,
             loss_weights=loss_weights,
             loss_preset=loss_preset,
+            source_total_levels=(
+                split["test_source_total_levels"]
+                if loss_preset_requires_source_total_levels(loss_preset)
+                else None
+            ),
         )
         test_losses.append(test_epoch_loss)
         learning_rates.append(float(optimizer.param_groups[0]["lr"]))
@@ -2605,6 +2712,7 @@ def train_inverse_model(
             LOSS_PRESET_NOISE_DETUNE,
             LOSS_PRESET_NOISE_DETUNE_ABLATION,
             LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
+            LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
         )
         else {},
         "tensor_path": str(tensor_path),

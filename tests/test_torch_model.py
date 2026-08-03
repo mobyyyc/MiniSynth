@@ -36,6 +36,7 @@ from minisynth.torch_model import (
     LOSS_PRESET_NOISE_DETUNE_ABLATION,
     LOSS_PRESET_NOISE_DETUNE_CALIBRATION,
     LOSS_PRESET_QUIET_TOTAL_OVERSHOOT,
+    LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
     load_mel_tensor_npz,
     load_torch_checkpoint,
     parameter_mae_by_name,
@@ -406,6 +407,8 @@ class TestTorchInverseModel(unittest.TestCase):
             prepared["targets"][0, parameter_names.index("detuned_balance")],
             0.6,
         )
+        self.assertEqual(prepared["targets"].shape[1], 11)
+        self.assertAlmostEqual(prepared["source_total_levels"][0], 0.25)
         self.assertAlmostEqual(reconstructed["osc1_level"], 0.4)
         self.assertAlmostEqual(reconstructed["osc2_level"], 0.6)
         scaled_equivalent = dict(reconstructed)
@@ -437,6 +440,86 @@ class TestTorchInverseModel(unittest.TestCase):
         )
 
         self.assertTrue(torch.isfinite(loss))
+
+    def test_legacy_balance_curriculum_requires_sidecar_metadata(self):
+        parameters = target_parameters_for_mode(TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX)
+        model = create_inverse_model(
+            output_dim=len(parameters),
+            input_channels=2,
+            waveform_mode="classification",
+            parameters=parameters,
+        )
+        features = torch.zeros(2, 2, DEFAULT_MEL_BINS, 8)
+        targets = torch.full((2, len(parameters)), 0.5)
+
+        with self.assertRaisesRegex(ValueError, "source_total_levels"):
+            inverse_model_loss(
+                model,
+                model(features),
+                targets,
+                features=features,
+                loss_preset=LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
+            )
+
+    def test_legacy_balance_curriculum_accepts_detached_sidecar_metadata(self):
+        parameters = target_parameters_for_mode(TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX)
+        model = create_inverse_model(
+            output_dim=len(parameters),
+            input_channels=2,
+            waveform_mode="classification",
+            parameters=parameters,
+        )
+        features = torch.zeros(2, 2, DEFAULT_MEL_BINS, 8)
+        targets = torch.full((2, len(parameters)), 0.5)
+        source_total_levels = torch.tensor([0.2, 0.8])
+
+        loss = inverse_model_loss(
+            model,
+            model(features),
+            targets,
+            features=features,
+            loss_preset=LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
+            source_total_levels=source_total_levels,
+        )
+
+        self.assertTrue(torch.isfinite(loss))
+        self.assertFalse(source_total_levels.requires_grad)
+        self.assertEqual(model.output_dim, 11)
+
+    def test_legacy_balance_curriculum_uses_source_total_weights_for_balance(self):
+        parameters = target_parameters_for_mode(TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX)
+        model = create_inverse_model(
+            output_dim=len(parameters),
+            input_channels=2,
+            waveform_mode="classification",
+            parameters=parameters,
+        )
+        features = torch.zeros(2, 2, DEFAULT_MEL_BINS, 8)
+        targets = torch.full((2, len(parameters)), 0.5)
+        balance_index = [parameter.name for parameter in parameters].index("detuned_balance")
+        targets[:, balance_index] = torch.tensor([0.0, 1.0])
+        with torch.no_grad():
+            model.continuous_head[0].weight.zero_()
+            model.continuous_head[0].bias.fill_(-2.0)
+
+        quiet_first = inverse_model_loss(
+            model,
+            model(features),
+            targets,
+            features=features,
+            loss_preset=LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
+            source_total_levels=torch.tensor([0.2, 0.8]),
+        )
+        loud_first = inverse_model_loss(
+            model,
+            model(features),
+            targets,
+            features=features,
+            loss_preset=LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
+            source_total_levels=torch.tensor([0.8, 0.2]),
+        )
+
+        self.assertNotAlmostEqual(quiet_first.item(), loud_first.item())
 
     def test_audible_loss_weights_loud_detuned_wave_more_than_quiet(self):
         parameters = target_parameters_for_mode(TARGET_MODE_MAIN_DETUNED_MIX)
@@ -865,6 +948,41 @@ class TestTorchInverseModel(unittest.TestCase):
         self.assertEqual(metrics["test_samples"], 3)
         self.assertEqual(metrics["benchmark_samples"], 0)
         self.assertEqual(metrics["validation_tensor_path"], str(dev_dir))
+
+    def test_train_inverse_model_supports_sharded_legacy_balance_curriculum(self):
+        with TemporaryDirectory() as temp_dir:
+            directory = Path(temp_dir) / "train"
+            directory.mkdir()
+            targets = np.full((4, len(VECTOR_PARAMETERS)), 0.5, dtype=np.float32)
+            names = [parameter.name for parameter in VECTOR_PARAMETERS]
+            targets[:, names.index("osc1_level")] = [0.1, 0.2, 0.8, 0.9]
+            targets[:, names.index("osc2_level")] = [0.1, 0.2, 0.8, 0.9]
+            np.savez_compressed(
+                directory / "mel_tensors_part_000.npz",
+                features=np.zeros((4, 1, DEFAULT_MEL_BINS, 16), dtype=np.float32),
+                targets=targets,
+                indices=np.arange(4, dtype=np.int64),
+                seeds=np.arange(100, 104, dtype=np.int64),
+                metadata_path="metadata.jsonl",
+                frames=np.asarray(16, dtype=np.int64),
+            )
+
+            result = train_inverse_model(
+                tensor_path=directory,
+                model_id="v3_10_test",
+                epochs=1,
+                batch_size=2,
+                test_size=0.25,
+                target_mode=TARGET_MODE_GAIN_INVARIANT_MAIN_DETUNED_MIX,
+                loss_preset=LOSS_PRESET_LEGACY_BALANCE_CURRICULUM,
+                random_state=1,
+                device=torch.device("cpu"),
+            )
+
+        metrics = result["metrics"]
+        self.assertEqual(metrics["loss_preset"], LOSS_PRESET_LEGACY_BALANCE_CURRICULUM)
+        self.assertEqual(metrics["num_targets"], 11)
+        self.assertNotIn("osc_total_level", metrics["target_parameters"])
 
     def test_train_inverse_model_supports_pitch_conditioned_timbre_mode(self):
         with TemporaryDirectory() as temp_dir:
