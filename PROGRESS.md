@@ -575,7 +575,8 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
   totals from the original tensor targets, carries them through the selected training and
   validation batches only, and applies v3.6-style normalized audibility weights exclusively to
   `detuned_balance`. The 11-output gain-invariant layout, checkpoint shape, and inference API
-  are unchanged. Focused PyTorch tests (65) and the full suite (253) pass.
+  are unchanged. The committed v3.10 plan and README now provide the exact user-run command.
+  Focused PyTorch tests (65) and the full suite (253) pass.
 - Pre-registered `v3.10_gain_invariant_balance_curriculum` before implementation. It retains
   v3.9's 11-output gain-invariant model and canonical inference, while restoring only v3.6's
   source-total-weighted `detuned_balance` curriculum through detached training sidecar

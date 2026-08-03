@@ -271,21 +271,21 @@ also rejected. See `docs/NEXT_GENERATION_MODEL_STRATEGY.md` for the recorded evi
   --metrics-output runs/nwsd_v1/training/v3.8_quiet_total_overshoot_metrics.json
 ```
 
-When v3.9 training is approved, train the gain-invariant candidate with:
+When v3.10 training is approved, train the isolated gain-invariant balance-curriculum candidate with:
 
 ```powershell
 & $Python scripts/train_torch.py `
-  --model-id v3.9_gain_invariant_mix `
+  --model-id v3.10_gain_invariant_balance_curriculum `
   --target-mode gain_invariant_main_detuned_mix `
-  --loss-preset noise_detune_ablation `
+  --loss-preset legacy_balance_curriculum `
   --tensor-data data/generated/nwsd_v1/train/features `
   --validation-tensor-data data/generated/nwsd_v1/dev/features `
   --epochs 50 `
   --batch-size 128 `
   --device cuda `
   --quiet `
-  --model-output models/v3.9_gain_invariant_mix.pt `
-  --metrics-output runs/nwsd_v1/training/v3.9_gain_invariant_mix_metrics.json
+  --model-output models/v3.10_gain_invariant_balance_curriculum.pt `
+  --metrics-output runs/nwsd_v1/training/v3.10_gain_invariant_balance_curriculum_metrics.json
 ```
 
 The frozen benchmark must not be supplied to training or checkpoint selection.

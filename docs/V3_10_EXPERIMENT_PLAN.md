@@ -49,6 +49,25 @@ selected. With `legacy_balance_curriculum`, sharded and unsharded training pass 
 one-dimensional sidecar tensor only into the loss. The preset rejects missing sidecar metadata
 instead of silently falling back to uniform balance weighting.
 
+## Approved training command
+
+```powershell
+& $Python scripts/train_torch.py `
+  --model-id v3.10_gain_invariant_balance_curriculum `
+  --target-mode gain_invariant_main_detuned_mix `
+  --loss-preset legacy_balance_curriculum `
+  --tensor-data data/generated/nwsd_v1/train/features `
+  --validation-tensor-data data/generated/nwsd_v1/dev/features `
+  --epochs 50 `
+  --batch-size 128 `
+  --device cuda `
+  --quiet `
+  --model-output models/v3.10_gain_invariant_balance_curriculum.pt `
+  --metrics-output runs/nwsd_v1/training/v3.10_gain_invariant_balance_curriculum_metrics.json
+```
+
+Do not supply the immutable `benchmark` partition to this command.
+
 ## Evaluation contract
 
 Use the existing fixed evaluation protocols and frozen manifests:
