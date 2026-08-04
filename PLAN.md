@@ -985,6 +985,14 @@ for `detuned_balance`; the 11-target gain-invariant model and canonical inferenc
 unchanged. Its fixed controls, frozen evaluation protocol, and all-or-nothing promotion gates
 are recorded in `docs/V3_10_EXPERIMENT_PLAN.md` before implementation.
 
+v3.10 was rejected after the prescribed single training run and frozen evaluations. Its
+source-total curriculum improved the product mean relative to v3.9 (`22.226` versus `29.218`)
+and quiet category (`22.940` versus `38.846`), confirming that the curriculum matters, but it
+still missed the v3.6 aggregate gates and regressed NWSD-v1 to `29.733`. Do not tune the
+sidecar weighting. The next research design must isolate the removed-head or shared-
+representation effect while continuing to keep unidentifiable global oscillator gain out of
+the inference target.
+
 ### Milestone I: Product Prototype - Windows Desktop App
 
 Goal: turn NeuroWave from a research CLI into a usable single-platform desktop application

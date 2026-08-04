@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-02  
 **Candidate:** `v3.10_gain_invariant_balance_curriculum`  
-**Status:** Implemented and unit-tested; not trained
+**Status:** Evaluated and rejected; v3.6 remains active
 
 ## Question
 
@@ -67,6 +67,28 @@ instead of silently falling back to uniform balance weighting.
 ```
 
 Do not supply the immutable `benchmark` partition to this command.
+
+## Frozen evaluation result
+
+v3.10 was trained once (best validation epoch 31) and evaluated once on 2026-08-03. It
+restored a meaningful part of v3.9's product performance, which supports the diagnosis that
+the balance curriculum matters, but it missed every quality gate except renderer reliability.
+It is rejected without a blind listening review.
+
+| Gate | Requirement | v3.10 result | Decision |
+| --- | ---: | ---: | --- |
+| NWSD-v1 mean spectral distance | `<= 26.288` | `29.733` | Fail |
+| Product-suite mean spectral distance | `<= 20.738` | `22.226` | Fail |
+| Quiet-category mean spectral distance | `<= 10.000` | `22.940` | Fail |
+| Gain-invariant detuned-balance MAE | `<= 0.0751` | `0.077946` | Fail |
+| Main-wave error vs. v3.9 | no regression > `0.002` | `+0.002875` | Fail |
+| Detuned-wave error vs. v3.9 | no regression > `0.002` | `+0.003250` | Fail |
+| Renderer failures | `0` | `0` | Pass |
+
+The source-total sidecar is therefore not sufficient to rescue the gain-invariant candidate.
+Do not sweep its weighting or promote this checkpoint. The next design decision must isolate
+the removed-head/shared-representation effect without restoring global level as an inference
+target.
 
 ## Evaluation contract
 

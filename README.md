@@ -254,7 +254,10 @@ audio despite a small total-level MAE improvement. `v3.6_noise_detune_ablation` 
 active model. The `v3.9_gain_invariant_mix` candidate removes the global
 oscillator-total target because current rendering and mel features intentionally discard common
 gain; its frozen evaluation nevertheless regressed rendered-audio and balance metrics, so it is
-also rejected. See `docs/NEXT_GENERATION_MODEL_STRATEGY.md` for the recorded evidence and gates.
+also rejected. The follow-up `v3.10_gain_invariant_balance_curriculum` restored v3.6's
+training-only source-total balance weighting and improved v3.9's product score, but still
+missed the v3.6 aggregate and quiet gates; it is also rejected. See
+`docs/V3_10_EXPERIMENT_PLAN.md` for the recorded evidence and gates.
 
 ```powershell
 # Historical v3.8 reproduction command; do not treat its checkpoint as a candidate for release.
@@ -271,7 +274,7 @@ also rejected. See `docs/NEXT_GENERATION_MODEL_STRATEGY.md` for the recorded evi
   --metrics-output runs/nwsd_v1/training/v3.8_quiet_total_overshoot_metrics.json
 ```
 
-When v3.10 training is approved, train the isolated gain-invariant balance-curriculum candidate with:
+Historical v3.10 reproduction command; do not treat its checkpoint as a release candidate:
 
 ```powershell
 & $Python scripts/train_torch.py `

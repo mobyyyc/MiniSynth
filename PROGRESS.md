@@ -324,6 +324,7 @@ Next recommended task:
 - [x] Diagnose v3.9's balance regression. It changed both the output target and v3.6's source-total-weighted balance curriculum; the next design must isolate legacy balance weighting without restoring total-level inference.
 - [x] Pre-register the v3.10 gain-invariant legacy-balance-curriculum experiment and its promotion gates before implementation.
 - [x] Implement and test v3.10's detached source-total sidecar loss path. The gain-invariant target layout and inference interface remain unchanged; do not train yet.
+- [x] Evaluate v3.10 on the frozen NWSD-v1 and product benchmarks, then apply its pre-registered promotion gates before any listening review. Reject it without blind review; v3.6 remains active.
 - [ ] Commit Milestone H completion.
 
 ## Milestone I: Product Prototype - Windows Desktop App
@@ -568,6 +569,15 @@ Goal: make NeuroWave reliable enough for repeated use outside the developer envi
 - [ ] Commit Milestone J completion.
 
 ## Progress Log
+
+### 2026-08-03
+
+- Trained once and evaluated `v3.10_gain_invariant_balance_curriculum` on the frozen
+  NWSD-v1 and product suites. It improved v3.9's product mean (`22.226` vs. `29.218`) and
+  quiet category (`22.940` vs. `38.846`), but missed all v3.6 promotion gates: NWSD mean
+  `29.733`, product mean `22.226`, quiet `22.940`, balance MAE `0.077946`, and both waveform
+  errors worsened by more than `0.002` vs. v3.9. It had zero render failures. Reject without a
+  blind review; retain v3.6 and do not sweep the sidecar weighting.
 
 ### 2026-08-02
 
